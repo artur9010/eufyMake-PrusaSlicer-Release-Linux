@@ -20,8 +20,9 @@
 set -euo pipefail
 
 # ============================ EDIT THESE ============================
-APP_NAME="AnkerMake M5 ARM Sender"
-BUNDLE_ID="com.bobbyb.ankermake-m5-arm-sender"     # must NOT be com.anker.*
+APP_NAME="M5 FDM Studio"
+FULL_NAME="M5 FDM Studio for AnkerMake M5 M5C printers"   # descriptive/marketing name
+BUNDLE_ID="com.bobbyb.m5-fdm-studio"               # must NOT be com.anker.*
 VERSION="0.1.0"
 
 # Your "Developer ID Application" identity, e.g.:
@@ -80,6 +81,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleExecutable</key>        <string>eufyStudio</string>
   <key>CFBundleName</key>              <string>$APP_NAME</string>
   <key>CFBundleDisplayName</key>       <string>$APP_NAME</string>
+  <key>CFBundleGetInfoString</key>     <string>$FULL_NAME</string>
+  <key>NSHumanReadableCopyright</key>  <string>$FULL_NAME</string>
   <key>CFBundleIdentifier</key>        <string>$BUNDLE_ID</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key>           <string>$VERSION</string>
