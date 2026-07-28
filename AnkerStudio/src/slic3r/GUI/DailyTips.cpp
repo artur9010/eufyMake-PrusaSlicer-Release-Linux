@@ -5,6 +5,7 @@
 #endif
 #include <imgui/imgui_internal.h>
 #include <boost/filesystem.hpp>
+#include <algorithm>
 
 namespace Slic3r { namespace GUI {
 
@@ -104,13 +105,20 @@ void DailyTipsDataRenderer::render(const ImVec2& pos, const ImVec2& size) const
    // ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.3f, 0.6f, 1.0f)); 
     if (ImGui::BeginChild(name.c_str(), size, false, window_flags)) {
         if (m_layout == DailyTipsLayout::Vertical) {
-            ImVec2 navigator_size = ImVec2(size.x, 9.0f / 16.0f * size.x);
+            // The image band's 16:9 height is derived from the panel WIDTH, so on a wide
+            // notification it grows until it has eaten nearly the whole panel and the tip
+            // text is left with a few unreadable pixels. Cap it so the text always keeps
+            // its share of the height.
+            const float navigator_height = std::min(9.0f / 16.0f * size.x, 0.55f * size.y);
+            ImVec2 navigator_size = ImVec2(size.x, navigator_height);
             render_img_navigator({ 0, 0 }, navigator_size);
             float img_text_gap = ImGui::CalcTextSize("A").y;
             render_text({ 0, navigator_size.y + img_text_gap}, { size.x, size.y - navigator_size.y - img_text_gap });
         }
         if (m_layout == DailyTipsLayout::Horizontal) {
-            ImVec2 navigator_size = ImVec2(16.0f / 9.0f * size.y, size.y);
+            // Same guard on the other axis: the band's width comes from the panel HEIGHT.
+            const float navigator_width = std::min(16.0f / 9.0f * size.y, 0.55f * size.x);
+            ImVec2 navigator_size = ImVec2(navigator_width, size.y);
             render_img_navigator({ 0, 0 }, navigator_size);
             float img_text_gap = ImGui::CalcTextSize("A").y;
             render_text({ navigator_size.x + img_text_gap, 0 }, { size.x - navigator_size.x - img_text_gap, size.y });
@@ -201,6 +209,21 @@ void DailyTipsDataRenderer::render_img_navigator(const ImVec2& start_pos, const 
     float img_width = next_btn_pos.x - prev_btn_pos.x - button_size.x - spacing * 2;
     ImVec2 img_pos = ImVec2(prev_btn_pos.x + button_size.x + spacing, 0);
     ImVec2 img_size = ImVec2(img_width, size.y);
+
+    // Letterbox the artwork inside the band at its own aspect ratio instead of
+    // stretching it to fill: the tip images are ~4:3, so filling a 16:9 band blew the
+    // printer picture up and distorted it.
+    const GLTexture* img_texture = has_image() ? m_texture : m_placeholder_texture;
+    if (img_texture && img_texture->get_width() > 0 && img_texture->get_height() > 0 &&
+        img_width > 0.0f && size.y > 0.0f) {
+        const float tex_aspect = (float)img_texture->get_width() / (float)img_texture->get_height();
+        if (img_width / size.y > tex_aspect)
+            img_size = ImVec2(size.y * tex_aspect, size.y);
+        else
+            img_size = ImVec2(img_width, img_width / tex_aspect);
+        img_pos.x += (img_width - img_size.x) * 0.5f;
+        img_pos.y += (size.y - img_size.y) * 0.5f;
+    }
 
     ImGui::SetCursorPos(img_pos);
     if (has_image())
