@@ -1,96 +1,108 @@
+# Building M5 FDM Studio on macOS
 
-# Building AnkerMake Studio on Mac OS
+This fork builds for **Apple Silicon (arm64) only** — `gen_xcode_proj.sh` passes
+`-DCMAKE_OSX_ARCHITECTURES=arm64`. There is no Intel or universal build.
 
-## 0. Prerequisities
-To build AnkerMake Studio on Mac OS, you will need the following software:
+## 0. Prerequisites
 
-- XCode from app store
-- CMake
-- Git
-- gettext
-- FFmepg
-- openssl
-- jansson
+- An Apple Silicon Mac (M1 or later), macOS 11 or newer
+- Xcode from the App Store, plus the command line tools (`xcode-select --install`)
+- Homebrew packages:
 
-XCode is available through Apple's App Store, the other three tools are available on
-[brew](https://brew.sh/) (use `brew install cmake git gettext` to install them).
+```
+brew install cmake git gettext openssl@3 xz zstd jansson dylibbundler
+```
+
+`cmake`, `git`, and `gettext` are needed to build. `openssl@3`, `xz`, `zstd`, and
+`jansson` are linked by the application. `dylibbundler` is only needed if you want to
+package a distributable `.app` (see step 4).
+
+FFmpeg is **not** required. The camera stream is decoded with VideoToolbox on macOS;
+FFmpeg is only used by the Windows build.
 
 ## 1. Download sources
-Clone the respository. Use a directory relatively close to the drive root, so the path is not too long. Avoid spaces and non-ASCII characters, run:
+
+Clone the repository. Use a directory relatively close to the drive root, so the path is
+not too long. Avoid spaces and non-ASCII characters:
+
 ```
 mkdir src
 cd src
 
-git clone https://github.com/ankermake/AnkerMake-PrusaSlicer-Release.git
+git clone https://github.com/bobbyb/eufyMake-PrusaSlicer-Release-ARM.git
 ```
 
-## 2. Build Instructions
+## 2. Compile the dependencies
 
-### Compile and Install the dependencies.
-run the following:
+```
+cd eufyMake-PrusaSlicer-Release-ARM/AnkerStudio/deps
+mkdir deps_build
+cd deps_build
+cmake ..
+make -jN
+```
 
+`N` is the number of CPU cores, so for example `make -j8` on an 8-core machine. This takes
+a while — it builds Boost, wxWidgets, and the other bundled libraries.
 
-	1. cd src/AnkerStudio/deps
-	2. mkdir src/AnkerStudio/deps/deps_build
-	3. cd src/AnkerStudio/deps/deps_build
-	4. cmake ..
-	5. make -jN
-	6. build the dependency library to src/AnkerStudio/deps/deps_build/destdir
-	7. Install some other dependency librarys: jansson, FFmepg, openssl
+The result lands in `AnkerStudio/deps/deps_build/destdir`, which is where the next step
+expects to find it.
 
-Note that `N` is the number of CPU cores, so, for example `make -j4` for a 4-core machine.
-The library and include path for dependencies should reference `AnkerStudio\src\slic3r\CMakeLists.txt`
+## 3. Generate the Xcode project
 
-### Generate XCode project file for AnkerMake Studio.
+```
+cd ../..          # back to AnkerStudio/
+./gen_xcode_proj.sh
+```
 
-	1. update deps_arm_dir to src/AnkerStudio/deps/deps_build/destdir in src/AnkerStudio/gen_xcode_proj.sh 
-	2. mkdir -p src/AnkerStudio/build_xcode/src/Debug
-	3. run the src/gen_xcode_proj.sh to generate XCode project
+The script resolves every path relative to its own location, so there is nothing to edit
+before running it — a fresh clone in any directory works as-is. It creates
+`build_xcode/`, runs CMake with the Xcode generator, and copies the pinned certificates
+from `resources/crt/` into the build output directory.
 
-Note that `deps_arm_dir` must be absolute path. A relative path will not work.
-Note that `mkdir -p src/AnkerStudio/build_xcode/src/Debug` change to `mkdir -p src/AnkerStudio/build_xcode/src/Release` when you select release build.
+## 4. Build and run
 
-### Compile and Run AnkerMake Studio. 
-Click `src\AnkerStudio\build_xcode\AnkerStudio.xcodeproj` to open it in XCode (This should open up XCode where you can perform build using the GUI or perform other tasks.).
+Open `AnkerStudio/build_xcode/eufyStudio.xcodeproj` in Xcode, select the **eufyStudio**
+scheme, and press Run. Debug and Release both work.
 
+To build from the command line instead:
 
-Select `AnkerStudio` as your startup project, as shown in the figure below:
+```
+xcodebuild -project build_xcode/eufyStudio.xcodeproj -target eufyStudio -configuration Debug -jobs 8
+```
 
-![Alt text](Image/xcode_set_ankerstudio2.jpg)  
+The binary lands in `build_xcode/src/Debug/` (or `Release/`).
 
-![Alt text](Image/xcode_select_ankerstudio.jpg)
+### Packaging a distributable app
 
-Click the run button to compile and run AnkerMake Studio.
+Running the binary directly out of the build directory works, but it is not an application
+bundle, so macOS gives it no `Info.plist` and no menu bar. To assemble a real `.app`, use
+`make_app.sh`:
 
-![Alt text](Image/xcode_click_run.jpg)
+```
+CONFIG=Debug DO_NOTARIZE=0 DO_DMG=0 DEV_ID="" ./make_app.sh   # quick local bundle
+./make_app.sh                                                 # full: Release, signed, notarized, DMG
+```
 
-AnkerMake Studio should start. You're up and running!
+The full pipeline needs a "Developer ID Application" certificate and notarization
+credentials stored once with `xcrun notarytool store-credentials`. See the comments at the
+top of `make_app.sh`. Pass `DEV_ID` in the environment rather than editing the script, so
+your signing identity is not committed.
 
-### Network Plugin
-### x86 Architecture Computer
-If you need to use network functions or device control functions, then you need to install the network plug-in, as shown in the figure below:
+## Network plugin
 
-![Alt text](Image/install_network_plugin.png)
-Before downloading the network plug-in library, you need to perform the following operations:
+**No plugin download is needed, on any architecture.**
 
-	1. mkdir -p src/AnkerMake-PrusaSlicer-Release/AnkerStudio/build_xcode/src/Frameworks
-	2. cp src/AnkerMake-PrusaSlicer-Release/AnkerStudio/deps/bin/mac/x86/* src/AnkerMake-PrusaSlicer-Release/AnkerStudio/build_xcode/src/Frameworks
+Upstream ships the network layer — login, device discovery, telemetry, printing — as a
+closed-source `libAnkerNet.dylib` that the app downloads on first run. That library is
+x86_64 only, so it cannot load on Apple Silicon.
 
-### arm Architecture Computer
-On ARM-based computers, such as M1/M2, etc, no need to click the install button to download the network plug-in library. 
-You need to perform the following operations:
+This fork builds a native replacement from source at
+`src/slic3r/GUI/AnkerNetModule/AnkerNetNative.*`. It is compiled as `libAnkerNet.dylib`
+alongside the executable and loaded through the same `boost::dll` contract, so nothing
+needs to be copied into place and the app never prompts to install a plugin. It is built
+automatically; `OPEN_SOURCE` is set `ON` in `CMakeLists.txt` and is not a user-facing
+option.
 
-	1. mkdir -p ~/Library/Application Support/AnkerMake Studio Profile/OnlineAnkerNet/Current
-	2. cp src/AnkerMake-PrusaSlicer-Release/AnkerStudio/deps/bin/mac/arm/* ~/Library/Application Support/AnkerMake Studio Profile/OnlineAnkerNet/Current
-
-Then reopen the software and you can use it.
-
-### Use Release Mode
-
-Note that AnkerMake Studio must use Release mode when downloading and using network plug-ins.
-
-How to use release mode refer to the figure below：
-
-![Alt text](Image/xcode_set_scheme.jpg)
-
-![Alt text](Image/xcode_set_release.jpg)
+Both Debug and Release work. Upstream's requirement to use Release mode for the network
+plugin does not apply here.
