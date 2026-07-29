@@ -10,10 +10,14 @@ It is a fork of [eufyMake Studio](https://github.com/eufymake/eufyMake-PrusaSlic
 and tracks upstream v1.5.26. The slicing engine, profiles, and output are unchanged; the
 work in this fork is in the networking, device, and printing layers.
 
-The upstream release ships a closed-source, x86_64-only network plugin, which forces the
-whole application to run under Rosetta on Apple Silicon. This fork replaces that plugin
-with a native implementation built from source, so the app runs natively on arm64 — and
-keeps running on macOS 27, where relying on Rosetta is no longer a safe assumption.
+### Why this fork exists
+
+macOS 27 drops support for Intel applications. The upstream release ships a
+closed-source, x86_64-only network plugin, which forces the whole application to run under
+Rosetta on Apple Silicon — so upstream stops working on macOS 27 altogether.
+
+This fork replaces that plugin with a native implementation built from source. Nothing in
+the app is x86_64, nothing depends on Rosetta, and it keeps working on macOS 27.
 
 This is an unofficial community fork. It is not affiliated with, endorsed by, or supported
 by Anker or eufyMake.
@@ -27,7 +31,7 @@ RepRap community.
 
 Key features are:
 
-- **Runs on macOS 27** — fully native arm64, with no dependency on Rosetta;
+- **Runs on macOS 27**, which drops Intel app support — fully native arm64, no Rosetta;
 - Basic slicing features & GCode viewer;
 - Remote control & monitoring;
 - Live camera streaming, on the local network and remotely;
