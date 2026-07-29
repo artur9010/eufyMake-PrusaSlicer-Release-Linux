@@ -1314,6 +1314,11 @@ bool GUI_App::ProfileCompatibleProcess()
 void GUI_App::init_app_config()
 {
 	SetAppName(SLIC3R_APP_KEY " Profile");
+	// SetAppName drives data_dir() and must keep the old key so presets, config and the
+	// login cache stay where they are. But wx also derives the macOS application menu
+	// from it (GetAppDisplayName() falls back to GetAppName()), which left "Hide"/"Quit"
+	// showing the pre-rename name. Set the display name separately.
+	SetAppDisplayName(SLIC3R_APP_NAME);
 
 	// Set the Slic3r data directory at the Slic3r XS module.
 	// Unix: ~/ .Slic3r
