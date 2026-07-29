@@ -26,7 +26,9 @@ namespace Slic3r {
          
         // privacy & release
         const std::string PrivacyRequestUrl = "https://passport.eufymake.com/privacy-request?app=eufymake-us";
-        const std::string ReleaseUrl = "https://github.com/eufymake/eufyMake-PrusaSlicer-Release/releases";                
+        // This fork's releases, not upstream's -- the Release Notes menu item should
+        // describe the build the user is actually running.
+        const std::string ReleaseUrl = "https://github.com/bobbyb/eufyMake-PrusaSlicer-Release-ARM/releases";
         const std::string TermsOfServiceJaUrl = "https://d7p3a6aivdrwg.cloudfront.net/anker_general/public/agreement/2024/12/13/terms_of_use_jp.html";
         const std::string TermsOfServiceEnUrl = "https://d7p3a6aivdrwg.cloudfront.net/anker_general/public/agreement/2024/12/13/terms_of_use_en.html";
 
