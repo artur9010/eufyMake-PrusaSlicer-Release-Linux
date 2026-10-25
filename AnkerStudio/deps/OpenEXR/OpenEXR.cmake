@@ -10,6 +10,8 @@ prusaslicer_add_cmake_project(OpenEXR
         -DPYILMBASE_ENABLE:BOOL=OFF 
         -DOPENEXR_VIEWERS_ENABLE:BOOL=OFF
         -DOPENEXR_BUILD_UTILS:BOOL=OFF
+        # 2.5.5 relies on <cstdint> arriving transitively, which GCC 13+ headers no longer do.
+        "-DCMAKE_CXX_FLAGS:STRING=-include cstdint"
 )
 
 if (MSVC)

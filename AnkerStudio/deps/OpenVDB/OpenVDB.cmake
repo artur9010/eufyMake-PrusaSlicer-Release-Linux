@@ -7,7 +7,9 @@ else()
 endif()
 
 set (_openvdb_vdbprint ON)
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm" OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # On Linux the vdb_print tool fails to link against the static TBB 2021; the app
+    # only needs the library.
     # Build fails on raspberry pi due to missing link directive to latomic
     # Let's hope it will be fixed soon.
     set (_openvdb_vdbprint OFF)

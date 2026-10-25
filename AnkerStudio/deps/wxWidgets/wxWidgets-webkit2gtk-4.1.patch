@@ -1,0 +1,106 @@
+diff --git a/build/cmake/modules/FindLIBSOUP.cmake b/build/cmake/modules/FindLIBSOUP.cmake
+index cbfba1c..5d74c9b 100644
+--- a/build/cmake/modules/FindLIBSOUP.cmake
++++ b/build/cmake/modules/FindLIBSOUP.cmake
+@@ -32,18 +32,24 @@
+ # .pc file, so we need to rely on PC_LIBSOUP_VERSION and REQUIRE the .pc file
+ # to be found.
+ FIND_PACKAGE(PkgConfig)
+-PKG_CHECK_MODULES(PC_LIBSOUP QUIET libsoup-2.4)
++# webkit2gtk-4.1 links libsoup 3, webkit2gtk-4.0 links libsoup 2.4.
++PKG_CHECK_MODULES(PC_LIBSOUP QUIET libsoup-3.0)
++set(_libsoup_api 3.0)
++if(NOT PC_LIBSOUP_FOUND)
++    PKG_CHECK_MODULES(PC_LIBSOUP QUIET libsoup-2.4)
++    set(_libsoup_api 2.4)
++endif()
+ 
+ if(PC_LIBSOUP_FOUND)
+     FIND_PATH(LIBSOUP_INCLUDE_DIRS
+         NAMES libsoup/soup.h
+         HINTS ${PC_LIBSOUP_INCLUDEDIR}
+         ${PC_LIBSOUP_INCLUDE_DIRS}
+-        PATH_SUFFIXES libsoup-2.4
++        PATH_SUFFIXES libsoup-${_libsoup_api}
+         )
+ 
+     FIND_LIBRARY(LIBSOUP_LIBRARIES
+-        NAMES soup-2.4
++        NAMES soup-${_libsoup_api}
+         HINTS ${PC_LIBSOUP_LIBDIR}
+         ${PC_LIBSOUP_LIBRARY_DIRS}
+         )
+diff --git a/build/cmake/modules/FindWEBKIT2.cmake b/build/cmake/modules/FindWEBKIT2.cmake
+index 133e7a4..8a69323 100644
+--- a/build/cmake/modules/FindWEBKIT2.cmake
++++ b/build/cmake/modules/FindWEBKIT2.cmake
+@@ -5,7 +5,15 @@
+ #  WEBKIT2_LIBRARIES   - List of libraries when using Webkit2.
+ #  WEBKIT2_FOUND       - True if Webkit2 found.
+ 
+-SET( WEBKIT2_VERSION 4.0)
++# Prefer webkit2gtk-4.1 (libsoup 3), which is all that current distros and the
++# GNOME Flatpak runtime ship; fall back to the older webkit2gtk-4.0 (libsoup 2.4).
++find_package(PkgConfig)
++SET( WEBKIT2_VERSION 4.1)
++pkg_check_modules(PC_WEBKIT2 QUIET webkit2gtk-4.1)
++if(NOT PC_WEBKIT2_FOUND)
++    SET( WEBKIT2_VERSION 4.0)
++    pkg_check_modules(PC_WEBKIT2 QUIET webkit2gtk-4.0)
++endif()
+ 
+ set(WEBKIT2_INCLUDE_DIR WEBKIT2_INCLUDE_DIR-NOTFOUND)
+ set(WEBKIT2_LIBRARY WEBKIT2_LIBRARY-NOTFOUND)
+@@ -13,17 +21,20 @@ set(WEBKIT2_JS_LIBRARY WEBKIT2_JS_LIBRARY-NOTFOUND)
+ set(WEBKIT2_LIBRARIES WEBKIT2_LIBRARIES-NOTFOUND)
+ 
+ FIND_PATH(WEBKIT2_INCLUDE_DIR webkit2/webkit2.h
++    HINTS ${PC_WEBKIT2_INCLUDE_DIRS}
+     PATH_SUFFIXES "webkitgtk-${WEBKIT2_VERSION}"
+ )
+ 
+ SET(WEBKIT2_NAMES "webkit2gtk-${WEBKIT2_VERSION}")
+ FIND_LIBRARY(WEBKIT2_LIBRARY
+     NAMES ${WEBKIT2_NAMES}
++    HINTS ${PC_WEBKIT2_LIBRARY_DIRS}
+ )
+ 
+ SET(WEBKIT2_JS_NAMES "javascriptcoregtk-${WEBKIT2_VERSION}")
+ FIND_LIBRARY(WEBKIT2_JS_LIBRARY
+     NAMES ${WEBKIT2_JS_NAMES}
++    HINTS ${PC_WEBKIT2_LIBRARY_DIRS}
+ )
+ 
+ # Handle the QUIETLY and REQUIRED arguments and set WEBKIT2_FOUND to
+diff --git a/src/gtk/webview_webkit2.cpp b/src/gtk/webview_webkit2.cpp
+index a016124..d8b537b 100644
+--- a/src/gtk/webview_webkit2.cpp
++++ b/src/gtk/webview_webkit2.cpp
+@@ -166,15 +166,19 @@ wxgtk_webview_webkit_load_failed(WebKitWebView *,
+     {
+         switch (error->code)
+         {
++#if SOUP_MAJOR_VERSION < 3
++            // libsoup 3 dropped these transport-error pseudo status codes.
+             case SOUP_STATUS_CANCELLED:
+                 type = wxWEBVIEW_NAV_ERR_USER_CANCELLED;
+                 break;
+ 
+             case SOUP_STATUS_CANT_RESOLVE:
++#endif
+             case SOUP_STATUS_NOT_FOUND:
+                 type = wxWEBVIEW_NAV_ERR_NOT_FOUND;
+                 break;
+ 
++#if SOUP_MAJOR_VERSION < 3
+             case SOUP_STATUS_CANT_RESOLVE_PROXY:
+             case SOUP_STATUS_CANT_CONNECT:
+             case SOUP_STATUS_CANT_CONNECT_PROXY:
+@@ -186,6 +190,7 @@ wxgtk_webview_webkit_load_failed(WebKitWebView *,
+             case SOUP_STATUS_MALFORMED:
+                 type = wxWEBVIEW_NAV_ERR_REQUEST;
+                 break;
++#endif
+ 
+             case SOUP_STATUS_BAD_REQUEST:
+                 type = wxWEBVIEW_NAV_ERR_REQUEST;

@@ -15,6 +15,11 @@ endif()
 set(_wx_patch_step "")
 if (APPLE)
     set(_wx_patch_step PATCH_COMMAND ${PATCH_CMD} ${CMAKE_CURRENT_LIST_DIR}/wxWidgets.patch)
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # The app needs wxWebView; teach wx's find modules about webkit2gtk-4.1 / libsoup 3.
+    # Plain patch(1): `git apply` silently skips this patch when the build tree sits
+    # inside this repository's git checkout.
+    set(_wx_patch_step PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_LIST_DIR}/wxWidgets-webkit2gtk-4.1.patch)
 endif ()
 
 prusaslicer_add_cmake_project(wxWidgets
@@ -45,6 +50,7 @@ prusaslicer_add_cmake_project(wxWidgets
         -DwxUSE_XTEST=OFF
         -DwxUSE_GLCANVAS_EGL=OFF
         -DwxUSE_WEBREQUEST=OFF
+        -DwxUSE_WEBVIEW=ON
 )
 
 if (MSVC)
