@@ -2,7 +2,7 @@
 
 The Linux build uses GTK 3 and WebKitGTK 4.1. It is tested on x86_64 with GCC 16 and
 CMake 4. Most users should just install the Flatpak from the
-[releases page](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-ARM/releases):
+[releases page](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases):
 
 ```
 flatpak install --user M5FDMStudio.flatpak

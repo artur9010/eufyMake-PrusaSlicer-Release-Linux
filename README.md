@@ -48,8 +48,9 @@ Prebuilt, signed and notarized builds are on the
 
 ### Linux
 
-A Flatpak bundle (`M5FDMStudio.flatpak`, x86_64) is attached to each release, and every
-push builds one as a GitHub Actions artifact. Install it with:
+A Flatpak bundle (`M5FDMStudio.flatpak`, x86_64) is attached to each release of the
+[Linux fork](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases),
+and every push builds one as a GitHub Actions artifact. Install it with:
 
 ```
 flatpak install --user M5FDMStudio.flatpak
