@@ -126,7 +126,7 @@ modules:
       - -DSLIC3R_FHS=1
       - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     post-install:
-      - install -Dm644 pack/flatpak/io.github.artur9010.M5FDMStudio.metainfo.xml -t /app/share/metainfo
+      - install -Dm644 ${FLATPAK_BUILDER_BUILDDIR}/pack/flatpak/io.github.artur9010.M5FDMStudio.metainfo.xml -t /app/share/metainfo
     cleanup:
       - /lib/udev
       # Only files named after the app ID are exported; drop the G-code viewer launcher.
