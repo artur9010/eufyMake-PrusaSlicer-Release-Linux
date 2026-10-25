@@ -2,7 +2,7 @@
 #include <wx/event.h>
 #include "I18N.hpp"
 #include "GUI_App.hpp"
-#include "common/AnkerGUIConfig.hpp"
+#include "Common/AnkerGUIConfig.hpp"
 
 
 BEGIN_EVENT_TABLE(AnkerEasyItem, wxControl)

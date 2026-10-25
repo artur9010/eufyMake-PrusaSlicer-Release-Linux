@@ -17,6 +17,7 @@
     #endif /* SLIC3R_GUI */
 #endif /* WIN32 */
 
+#include <csignal>
 #include <cstdio>
 #include <string>
 #include <cstring>
@@ -749,7 +750,7 @@ std::string string_To_UTF8(const std::string& str)
 {
     std::string strCodePage = boost::locale::util::get_system_locale();
     std::locale loc = boost::locale::generator().generate(strCodePage);
-    auto dataStyle = use_facet<boost::locale::info>(loc).encoding();
+    auto dataStyle = std::use_facet<boost::locale::info>(loc).encoding();
     std::string readlData = boost::locale::conv::between((char*)str.c_str(), (char*)str.c_str() + str.size(), dataStyle, "UTF8");
     return readlData;
 }
@@ -1158,8 +1159,9 @@ void handle_sigpipe(int sig)
 int main(int argc, char **argv)
 {
     //do nothing,to ignore this sign
-#ifdef __APPLE__
+    // A write to a socket the broker already closed raises SIGPIPE, which would kill the app.
     signal(SIGPIPE, handle_sigpipe);
+#ifdef __APPLE__
     signal(SIGILL, handle_sigpipe);
 
     initBuryPoint();

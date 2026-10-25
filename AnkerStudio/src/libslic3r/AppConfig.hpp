@@ -77,7 +77,7 @@ public:
 	bool  				get_bool(const std::string &key) const
 		{ return this->get(key) == "1"; }
     
-    bool get_slice_times(const const std::string& section, const std::string& sliceKey, int& sliceTimes) {
+    bool get_slice_times(const std::string& section, const std::string& sliceKey, int& sliceTimes) {
         auto it = m_slice_config.find(section);
         if (it == m_slice_config.end())
             return false;
@@ -91,7 +91,7 @@ public:
         }
         return false;
     }
-    bool set_slice_times(const const std::string& section, const std::string& sliceKey, const std::string& userId, const std::string& versionId, int sliceTimes) {
+    bool set_slice_times(const std::string& section, const std::string& sliceKey, const std::string& userId, const std::string& versionId, int sliceTimes) {
 #ifndef NDEBUG
         {
             std::string key_trimmed = sliceKey;

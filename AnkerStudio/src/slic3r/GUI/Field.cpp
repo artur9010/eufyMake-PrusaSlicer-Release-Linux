@@ -19,7 +19,7 @@
 #include "OG_CustomCtrl.hpp"
 #include "MsgDialog.hpp"
 #include "BitmapComboBox.hpp"
-#include "libslic3r/utils.hpp"
+#include "libslic3r/Utils.hpp"
 #include "Common/AnkerSimpleCombox.hpp"
 #include "wx/odcombo.h"
 

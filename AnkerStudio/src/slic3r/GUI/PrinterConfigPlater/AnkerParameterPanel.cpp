@@ -9,10 +9,10 @@
 #include "../AnkerCheckBox.hpp"
 
 #include "../Plater.hpp"
-#include "libslic3r/print.hpp"
+#include "libslic3r/Print.hpp"
 #include "../SavePresetDialog.hpp"
 #include "libslic3r/PrintConfig.hpp"
-#include "../common/AnkerGUIConfig.hpp"
+#include "../Common/AnkerGUIConfig.hpp"
 #include "../SavePresetDialog.hpp"
 #include "slic3r/GUI/Common/AnkerMsgDialog.hpp"
 #include "../GUI.hpp"

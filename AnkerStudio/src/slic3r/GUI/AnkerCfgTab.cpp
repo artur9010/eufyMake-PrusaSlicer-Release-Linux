@@ -49,8 +49,8 @@
 #include "Notebook.hpp"
 
 #include "AnkerConfigDialog/AnkerConfigDialog.hpp"
-#include "common/AnkerMsgDialog.hpp"
-#include "common/AnkerGUIConfig.hpp"
+#include "Common/AnkerMsgDialog.hpp"
+#include "Common/AnkerGUIConfig.hpp"
 
 
 #define  ankerTextColor wxColour("#ADAEAF")

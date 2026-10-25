@@ -26,6 +26,8 @@
 #include <CoreServices/CoreServices.h>
 #else // Linux/BSD
 #include <charconv>
+#include <unistd.h>
+#include <dlfcn.h>
 #endif
 
 #ifdef _WIN32
@@ -63,7 +65,7 @@ void loadThePlugin()
 do{
     try {
 
-#ifndef  __APPLE__
+#ifdef _WIN32
         HMODULE ankerPluginHandle = LoadLibrary(L"AnkerPlugin.dll");
         if (ankerPluginHandle)
         {
@@ -182,6 +184,9 @@ static std::string getMachineId()
     CFStringGetCString(strRef, buffer, 1024, kCFStringEncodingMacRoman);
     machineId = buffer;
 
+#else
+    std::ifstream machineIdFile("/etc/machine-id");
+    std::getline(machineIdFile, machineId);
 #endif // _WIN32        
     return machineId;
 }
@@ -215,6 +220,8 @@ void initBuryPoint()
     osType = "Windows";
 #elif __APPLE__
     osType = "MacOS";
+#else
+    osType = "Linux";
 #endif
     headerList.push_back("Os_type: " + osType);
     headerList.push_back("Content-Type:application/json;charset=UTF-8");
@@ -326,7 +333,7 @@ std::string getMacAddress()
     if (gIsforbidShareBuryPoint) {
         return macAddress;
     }
-#ifndef __APPLE__
+#ifdef _WIN32
     ULONG ulBufferSize = 0;
     DWORD dwResult = ::GetAdaptersInfo(NULL, &ulBufferSize);
     if (ERROR_BUFFER_OVERFLOW != dwResult) {

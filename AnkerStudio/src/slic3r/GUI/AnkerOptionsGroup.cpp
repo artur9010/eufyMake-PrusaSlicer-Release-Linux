@@ -19,7 +19,7 @@
 #include "libslic3r/Preset.hpp"
 #include "I18N.hpp"
 
-#include "common/AnkerGUIConfig.hpp"
+#include "Common/AnkerGUIConfig.hpp"
 
 namespace Slic3r { namespace GUI {
 

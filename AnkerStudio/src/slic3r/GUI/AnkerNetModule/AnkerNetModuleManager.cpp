@@ -30,10 +30,14 @@
 #define AnkerNetFile "AnkerNet.dll"
 const std::string NetLibPatternStart = "AnkerNet_";
 const std::string NetLibPatternEnd = "dll";
-#else
+#elif __APPLE__
 #define AnkerNetFile "libAnkerNet.dylib"
 const std::string NetLibPatternStart = "libAnkerNet_";
 const std::string NetLibPatternEnd = "dylib";
+#else
+#define AnkerNetFile "libAnkerNet.so"
+const std::string NetLibPatternStart = "libAnkerNet_";
+const std::string NetLibPatternEnd = "so";
 #endif
 #define netplugin_download "netplugin_download"
 
@@ -167,9 +171,12 @@ public:
 #ifdef _WIN32
 		fileName = "AnkerNet_";
 		suffix = ".dll";
-#else
+#elif __APPLE__
 		fileName = "libAnkerNet_";
 		suffix = ".dylib";
+#else
+		fileName = "libAnkerNet_";
+		suffix = ".so";
 #endif
 #endif
 
@@ -205,8 +212,14 @@ public:
 		bfpath executablePath = boost::dll::program_location().parent_path();
 #ifdef _WIN32
 		ret = (executablePath / "resources" / "plugin" / AnkerNetFile);
-#else
+#elif __APPLE__
 		ret = executablePath.parent_path() / "Frameworks" / AnkerNetFile;
+#else
+		// Installed: <prefix>/bin/<exe> with the plugin in <prefix>/lib.
+		// Build tree: the plugin is written next to the executable.
+		ret = executablePath.parent_path() / "lib" / AnkerNetFile;
+		if (!FileExist(ret))
+			ret = executablePath / AnkerNetFile;
 #endif
 		ANKER_LOG_INFO << "need file: " << ret;
 		return ret;

@@ -8,6 +8,7 @@
 #include "libslic3r/Utils.hpp"
 
 #include <time.h>
+#include <fstream>
 
 #ifdef __APPLE__
 #include <sys/types.h>
@@ -272,6 +273,11 @@ SysInfo SysInfoCollector::GetSysInfo()
     CFStringGetCString(strRef, buffer, 1024, kCFStringEncodingMacRoman);
     machineId = buffer;
 
+#else
+    std::ifstream machineIdFile("/etc/machine-id");
+    std::string linuxMachineId;
+    std::getline(machineIdFile, linuxMachineId);
+    machineId = wxString::FromUTF8(linuxMachineId);
 #endif // _WIN32
 
     m_sysInfo.m_machineid = machineId.ToStdString();

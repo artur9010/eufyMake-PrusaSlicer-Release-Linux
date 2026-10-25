@@ -11,7 +11,7 @@
 #include "I18N.hpp"
 #include "format.hpp"
 
-#include "common/AnkerGUIConfig.hpp"
+#include "Common/AnkerGUIConfig.hpp"
 
 // add by dhf for debug reason
 static std::string num2Str(long long num)

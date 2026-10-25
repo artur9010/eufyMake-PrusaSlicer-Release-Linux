@@ -59,8 +59,8 @@
 #include "slic3r/Utils/AppUpdater.hpp"
 #include "slic3r/GUI/I18N.hpp"
 #include "AnkerBtn.hpp"
-#include "common/AnkerGUIConfig.hpp"
-#include "common/AnkerMsgDialog.hpp"
+#include "Common/AnkerGUIConfig.hpp"
+#include "Common/AnkerMsgDialog.hpp"
 #include "slic3r/Utils/DataMangerUi.hpp"
 #include "AnkerNetModule/BuryDefines.h"
 

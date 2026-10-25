@@ -989,11 +989,11 @@ namespace Slic3r {
                 wxGetApp().UpdateDarkUI((*btn), true);
             };
 
-#ifdef __APPLE__
+#ifndef _WIN32
             init_btn(&p->btn_export_gcode, _L("Export G-code") + dots, scaled_height);
             init_btn(&p->btn_reslice, _L("Slice now"), scaled_height);
             init_btn(&p->btn_print, _L("Go Print"), scaled_height);
-#elif _WIN32
+#else
             p->btn_export_gcode = new wxButton(nullptr, wxID_ANY, _L("Export G-code"), wxDefaultPosition,
                 wxSize(-1, scaled_height), wxBU_EXACTFIT);
             p->btn_export_gcode->Hide();
@@ -7822,9 +7822,9 @@ namespace Slic3r {
                 }
                 else if (paths.size() == 1) {
                     ANKER_LOG_INFO << "Import path: " << paths.front();
-#ifdef _WIN32
+#ifndef __APPLE__
                     wxString strPath = wxString::FromUTF8(paths.front().string());
-#elif __APPLE__
+#else
                     wxString strPath = wxString(paths.front().string());
 #endif
                     wxString gcodePath;
@@ -7899,9 +7899,9 @@ namespace Slic3r {
                         ANKER_LOG_INFO << "Import gcode/acode: " << path.string();
                         this->p->preview->setGCodeImportType(true); // Set import gcode type.
 
-#ifdef _WIN32
+#ifndef __APPLE__
                         wxString strPath = wxString::FromUTF8(path.string());
-#elif __APPLE__
+#else
                         wxString strPath = wxString(path.string());
 #endif
                         wxString gcodePath;
@@ -8474,7 +8474,7 @@ namespace Slic3r {
                 int index = std::string::npos;
 #ifdef _WIN32
                 index = tempGCodeFullName.find_last_of("\\");
-#elif __APPLE__
+#else
                 index = tempGCodeFullName.find_last_of("/");
 #endif
                 if (index == std::string::npos) {
@@ -8499,7 +8499,7 @@ namespace Slic3r {
                 wxString gCodeName = fileName.substr(0, index2 - 1);
 #ifdef _WIN32
                 int index3 = m_currentPrintGcodeFile.find_last_of("\\") + 2;
-#elif __APPLE__
+#else
                 int index3 = m_currentPrintGcodeFile.find_last_of("/") + 2;
 #endif
                 std::string destPath = m_currentPrintGcodeFile.substr(0, index3 - 1);
@@ -8512,7 +8512,7 @@ namespace Slic3r {
                 }
 #ifdef _WIN32
                 ankerNet->SetGcodePath(wdestPath.ToStdString(wxConvUTF8));
-#elif __APPLE__
+#else
                 ankerNet->SetGcodePath(wdestPath.ToStdString(wxConvUTF8));
 #endif // _WIN32
             }
@@ -8702,7 +8702,7 @@ namespace Slic3r {
                     }
 #ifdef _WIN32
                     default_output_file = tmpDir.string() + "\\" + name;
-#elif __APPLE__
+#else
                     default_output_file = tmpDir.string() + "/" + name;
 #endif // _WIN32
 

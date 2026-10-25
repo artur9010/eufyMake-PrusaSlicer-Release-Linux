@@ -19,6 +19,9 @@
 #elif _WIN32
 #define _AnkerFont(size) wxFont(size, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Microsoft YaHei")
 #define _AnkerFontParams(size, family, style, weight, underlined) wxFont(size, family, style, weight, underlined, "Microsoft YaHei")
+#else
+#define _AnkerFont(size) wxFont(size, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxEmptyString)
+#define _AnkerFontParams(size, family, style, weight, underlined) wxFont(size, family, style, weight, underlined, wxEmptyString)
 #endif // __APPLE__
 
 

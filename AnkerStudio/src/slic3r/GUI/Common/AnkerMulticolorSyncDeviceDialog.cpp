@@ -149,7 +149,7 @@ void AnkerMulticolorSyncDeviceItem::OnPaint(wxPaintEvent& event)
                 wxSize textSize = dc.GetTextExtent(text);
 #ifdef _WIN32
                 wxPoint textPoint(rectX + 10,rectY + 5);
-#elif __APPLE__
+#else
                 wxPoint textPoint(rectX + 11,rectY + 10);
 #endif
                 dc.DrawText(text, textPoint);

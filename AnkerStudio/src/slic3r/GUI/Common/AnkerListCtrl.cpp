@@ -152,10 +152,10 @@ void AnkerCopyrightListCtrl::getColumn(const wxPoint& point, int& column)
 
 void AnkerCopyrightListCtrl::getRow(const wxPoint& point, int& itemIndex)
 {
-#ifdef __APPLE__
+#ifndef _WIN32
     int flags;
     itemIndex = HitTest(point, flags);
-#elif _WIN32
+#else
     int lineHeight = m_lineHeight;
     int rowCount = GetItemCount();
     int topRow = GetTopItem();

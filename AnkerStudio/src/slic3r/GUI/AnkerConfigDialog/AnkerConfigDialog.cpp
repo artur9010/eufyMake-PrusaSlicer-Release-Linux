@@ -7,7 +7,7 @@
 #include "libslic3r/PresetBundle.hpp"
 #include "../Notebook.hpp"
 #include "../MainFrame.hpp"
-#include "../common/AnkerGUIConfig.hpp"
+#include "../Common/AnkerGUIConfig.hpp"
 #include "../Plater.hpp"
 
 

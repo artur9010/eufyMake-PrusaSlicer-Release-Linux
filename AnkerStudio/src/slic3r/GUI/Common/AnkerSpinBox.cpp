@@ -20,10 +20,10 @@ AnkerSpinBoxCtrlDoubleWithUnit::AnkerSpinBoxCtrlDoubleWithUnit(wxWindow* parent,
     wxPoint unitPos(interval + spinWidth, interval);
 
     SetBackgroundColour(bkColour);
-#ifdef _WIN32
+#ifndef __APPLE__
     m_spinCtrl = new AnkerTextCtrl(this, wxID_ANY, wxEmptyString, spinPos, wxSize(spinWidth, height - interval), wxBORDER_NONE);
 
-#elif __APPLE__
+#else
     m_spinCtrl = new AnkerTextCtrl(this, wxID_ANY, wxEmptyString, spinPos, wxSize(spinWidth, height - interval), wxSP_HORIZONTAL | wxALIGN_CENTRE_HORIZONTAL | wxBORDER_NONE);
 
 #endif // _WIN32
@@ -34,9 +34,9 @@ AnkerSpinBoxCtrlDoubleWithUnit::AnkerSpinBoxCtrlDoubleWithUnit(wxWindow* parent,
     wxFont unitFont = ANKER_FONT_NO_2;
     m_spinCtrl->SetFont(font);
 
-#ifdef _WIN32
+#ifndef __APPLE__
     m_unitText = new AnkerStaticText(this, wxID_ANY, unit, unitPos, wxSize(unitWidth, height - 1), wxBORDER_NONE);
-#elif __APPLE__
+#else
     m_unitText = new AnkerStaticText(this, wxID_ANY, unit, unitPos, wxSize(unitWidth, height - 1), wxSP_HORIZONTAL | wxALIGN_CENTRE_HORIZONTAL | wxBORDER_NONE);
 #endif // _WIN32
      m_unitText->SetBackgroundColour(bkColour);
@@ -561,11 +561,11 @@ AnkerSpinBoxCtrlDoubleWith2Btn::AnkerSpinBoxCtrlDoubleWith2Btn(wxWindow* parent,
     m_downBtn->Bind(wxEVT_BUTTON, &AnkerSpinBoxCtrlDoubleWith2Btn::OnDownBtnClicked, this);
     vBtnSizer->Add(m_downBtn, 0);
 
-#ifdef _WIN32
+#ifndef __APPLE__
 
     m_spinCtrl = new AnkerTextCtrl(this, wxID_ANY, wxEmptyString, spinPos, wxSize(spinWidth, height - 1), wxBORDER_NONE);
 
-#elif __APPLE__
+#else
 
     m_spinCtrl = new AnkerTextCtrl(this, wxID_ANY, wxEmptyString, spinPos, wxSize(spinWidth, height - 1), wxSP_HORIZONTAL | wxALIGN_CENTRE_HORIZONTAL | wxBORDER_NONE);
 

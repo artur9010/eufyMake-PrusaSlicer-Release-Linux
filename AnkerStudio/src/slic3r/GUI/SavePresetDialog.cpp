@@ -17,9 +17,9 @@
 #include "format.hpp"
 #include "Tab.hpp"
 // add by allen for ankerCfgDlg AnkerSavePresetDialog
-#include "common/AnkerSimpleCombox.hpp"
+#include "Common/AnkerSimpleCombox.hpp"
 #include "AnkerBtn.hpp"
-#include "common/AnkerGUIConfig.hpp"
+#include "Common/AnkerGUIConfig.hpp"
 
 using Slic3r::GUI::format_wxstr;
 

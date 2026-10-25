@@ -1,6 +1,7 @@
 #pragma once
 #include  <wx/sizer.h>
 #include "../wxExtensions.hpp"
+#include "AnkerCompositeButtonBase.hpp"
 
 
 namespace Slic3r {
@@ -13,7 +14,7 @@ namespace Slic3r {
 #define DEFAULT_FG_COLOUR  "#ffffff"
 
 
-		class AnkerSwitchButton :public wxButton {
+		class AnkerSwitchButton :public AnkerCompositeButtonBase {
 
 		public:
 			AnkerSwitchButton(wxWindow* parent, const wxBitmap& bitmap);

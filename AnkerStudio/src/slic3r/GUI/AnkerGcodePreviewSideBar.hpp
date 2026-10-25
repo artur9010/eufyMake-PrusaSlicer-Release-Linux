@@ -27,7 +27,7 @@
 #include <wx/wx.h>
 #include <wx/sizer.h>
 #include <wx/bitmap.h>
-#include <wx/Overlay.h>
+#include <wx/overlay.h>
 #include "wx/dcbuffer.h"
 #include "wx/popupwin.h"
 #include <wx/renderer.h>

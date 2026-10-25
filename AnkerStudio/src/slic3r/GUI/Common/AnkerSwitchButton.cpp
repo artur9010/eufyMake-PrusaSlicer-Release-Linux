@@ -11,7 +11,7 @@ namespace Slic3r {
 	namespace GUI {
 		
 		AnkerSwitchButton::AnkerSwitchButton(wxWindow* parent, const wxBitmap& bitmap)
-			: wxButton(parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxNO_BORDER )
+			: ANKER_COMPOSITE_BUTTON_INIT(parent, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxNO_BORDER)
 			, m_bitMap(bitmap), m_btnState(STATE_NORMAL)
 		{
 			m_backgroundColour = wxColour(DEFAULT_BG_COLOUR);
@@ -23,7 +23,7 @@ namespace Slic3r {
 		}
 
 		AnkerSwitchButton::AnkerSwitchButton(wxWindow* parent, ScalableBitmap& scalabelBitmap)
-			:wxButton(parent, wxID_ANY), m_normalSvg(scalabelBitmap), m_btnState(STATE_NORMAL)
+			:ANKER_COMPOSITE_BUTTON_INIT(parent, wxEmptyString), m_normalSvg(scalabelBitmap), m_btnState(STATE_NORMAL)
 		{
 			m_backgroundColour = wxColour(DEFAULT_BG_COLOUR);
 			m_foregroundColour = wxColour(DEFAULT_FG_COLOUR);
@@ -76,6 +76,11 @@ namespace Slic3r {
 		{
 			m_imageControl->Bind(wxEVT_LEFT_DOWN, &AnkerSwitchButton::OnChildMouseDown, this);
 			Bind(wxEVT_SIZE, &AnkerSwitchButton::OnResize, this);
+#ifdef __WXGTK__
+			// The GTK panel base gets no native wxEVT_BUTTON, and its static children have no
+			// window of their own, so clicks arrive here on the panel.
+			Bind(wxEVT_LEFT_DOWN, &AnkerSwitchButton::OnChildMouseDown, this);
+#endif
 		}
 
 		void AnkerSwitchButton::OnChildMouseDown(wxMouseEvent& event)

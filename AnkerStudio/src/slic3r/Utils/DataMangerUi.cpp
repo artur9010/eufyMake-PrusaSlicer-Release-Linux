@@ -96,7 +96,7 @@ size_t find_path_filename_index(const std::string& path)
 	int index = std::string::npos;
 #ifdef _WIN32
 	index = fullpath.find_last_of("\\");
-#elif __APPLE__
+#else
 	index = fullpath.find_last_of("/");
 #endif
 	return index;
@@ -149,6 +149,8 @@ AnkerNetInitPara DatamangerUi::GetNetPara()
 	para.Os_type = "Windows";
 #elif __APPLE__
 	para.Os_type = "MacOS";
+#else
+	para.Os_type = "Linux";
 #endif
 	para.Content_Type = "Content-Type:application/json;charset=UTF-8";
 

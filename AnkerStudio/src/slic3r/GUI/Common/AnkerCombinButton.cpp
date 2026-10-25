@@ -12,7 +12,7 @@ namespace Slic3r {
 	namespace GUI {
 
 		AnkerCombinButton::AnkerCombinButton(wxWindow* parent, const wxBitmap& bitmap, const wxString& label)
-			: wxButton(parent, wxID_ANY, label), m_Text(label), m_bitMap(bitmap), m_btnState(STATE_NORMAL)
+			: ANKER_COMPOSITE_BUTTON_INIT(parent, label), m_Text(label), m_bitMap(bitmap), m_btnState(STATE_NORMAL)
 		{
 			m_backgroundColour = wxColour(DEFAULT_BG_COLOUR);
 			m_foregroundColour = wxColour(DEFAULT_FG_COLOUR);
@@ -25,7 +25,7 @@ namespace Slic3r {
 		}
 
 		AnkerCombinButton::AnkerCombinButton(wxWindow* parent, ScalableBitmap& scalabelBitmap, const wxString& label)
-			:wxButton(parent, wxID_ANY, label), m_Text(label), m_normalSvg(scalabelBitmap), m_btnState(STATE_NORMAL)
+			:ANKER_COMPOSITE_BUTTON_INIT(parent, label), m_Text(label), m_normalSvg(scalabelBitmap), m_btnState(STATE_NORMAL)
 		{
 			m_backgroundColour = wxColour(DEFAULT_BG_COLOUR);
 			m_foregroundColour = wxColour(DEFAULT_FG_COLOUR);
@@ -184,6 +184,11 @@ namespace Slic3r {
 
 			m_textControl->Bind(wxEVT_LEAVE_WINDOW, &AnkerCombinButton::OnChildWindowLeave, this);
 			m_imageControl->Bind(wxEVT_LEAVE_WINDOW, &AnkerCombinButton::OnChildWindowLeave, this);
+#ifdef __WXGTK__
+			// The GTK panel base gets no native wxEVT_BUTTON, and its static children have no
+			// window of their own, so clicks arrive here on the panel.
+			Bind(wxEVT_LEFT_DOWN, &AnkerCombinButton::OnChildMouseDown, this);
+#endif
 		}
 
 		void AnkerCombinButton::OnChildMouseDown(wxMouseEvent& event)
@@ -264,7 +269,7 @@ namespace Slic3r {
 		}
 
 
-		BEGIN_EVENT_TABLE(AnkerCombinButton, wxButton)
+		BEGIN_EVENT_TABLE(AnkerCombinButton, AnkerCompositeButtonBase)
 			EVT_PAINT(AnkerCombinButton::OnPaint)
 			EVT_ENTER_WINDOW(AnkerCombinButton::OnMouseEnter)
 			EVT_LEAVE_WINDOW(AnkerCombinButton::OnMouseLeave)

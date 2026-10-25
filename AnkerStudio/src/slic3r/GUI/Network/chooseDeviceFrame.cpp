@@ -74,6 +74,8 @@ void AnkerChooseDeviceItem::setSelected(DeviceSelectMode selected)
 	iconPath += "/resources/icons/";
 #elif __APPLE__
 	iconPath += "/../Resources/icons/";
+#else
+	iconPath = wxString::FromUTF8(Slic3r::resources_dir()) + "/icons/";
 #endif 
 	ANKER_LOG_INFO << "iconPath: " << iconPath;
 	if (m_data.m_deviceStatus == Available) {
@@ -199,9 +201,9 @@ void AnkerChooseDeviceItem::OnPaint(wxPaintEvent& event)
 			}
 		}
 		wxPoint textPoint = AnkerPoint(100, 10);
-#ifdef _WIN32
+#ifndef __APPLE__
 		dc.DrawText(wxString::FromUTF8(m_data.m_deviceName), textPoint);
-#elif __APPLE__
+#else
 		dc.DrawText(m_data.m_deviceName, textPoint);
 #endif // _WIN32
 
@@ -469,6 +471,8 @@ AnkerChooseDevicePanel::AnkerChooseDevicePanel(wxWindow* parent, const wxString&
 	iconPath += "/resources/icons/choose_device_close.png";
 #elif __APPLE__
 	iconPath += "/../Resources/icons/choose_device_close.png";
+#else
+	iconPath = wxString::FromUTF8(Slic3r::resources_dir()) + "/icons/choose_device_close.png";
 #endif 
 
 	wxSize closeSize = AnkerSize(12, 12);
@@ -504,9 +508,9 @@ AnkerChooseDevicePanel::AnkerChooseDevicePanel(wxWindow* parent, const wxString&
 	titleSizer->AddSpacer(AnkerSize(145, 20).GetWidth());	 //145
 
 	titleSizer->Add(m_title, 1);
-#ifdef _WIN32
+#ifndef __APPLE__
 	titleSizer->AddSpacer(AnkerSize(90, 20).GetWidth());	 // 90
-#elif __APPLE__
+#else
 	titleSizer->AddSpacer(AnkerSize(107, 20).GetWidth());	 // 107
 #endif
 	titleSizer->Add(closeBtn, 1);

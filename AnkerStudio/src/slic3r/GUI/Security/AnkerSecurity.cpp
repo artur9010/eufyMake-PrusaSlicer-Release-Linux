@@ -4,11 +4,11 @@
 #include <random>
 #include <chrono>
 
-#ifndef __APPLE__
+#ifdef _WIN32
 #include <Windows.h>
 #include <winnt.rh>
 #include <wincrypt.h>
-#endif // !__APPLE__
+#endif // _WIN32
 
 const std::string global_pub_key = std::string("-----BEGIN PUBLIC KEY-----\n") +
                                    std::string("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvsZNbZBjM/ZGU5tGXTYe\n") +

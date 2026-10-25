@@ -301,7 +301,12 @@ bool WebDownload::OnDownReady()
     }
 
     //target_path /= (boost::format("%1%_%2%.3mf") % filename % unique).str();
+#ifdef __linux__
+    // wxString is UTF-8 based on GTK, so wc_str() returns a buffer object, not a pointer.
+    m_target_path /= boost::filesystem::path(filename.ToUTF8().data());
+#else
     m_target_path /= boost::filesystem::path(filename.wc_str());
+#endif
 
     m_down_filePath = m_target_path;
     m_down_filePath += format(".%1%", ".download");

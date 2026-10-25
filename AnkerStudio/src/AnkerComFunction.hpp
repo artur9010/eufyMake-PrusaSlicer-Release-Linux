@@ -1,8 +1,10 @@
 #ifndef ANKER_COM_FUNCTION_HPP
 #define ANKER_COM_FUNCTION_HPP
 
+#include <cstdint>
 #include <string>
 #include <map>
+#include <vector>
 #include "anker_plungin/Interface Files/AnkerPlugin.hpp"
 #include "slic3r/GUI/AnkerNetModule/BuryDefines.h"
 

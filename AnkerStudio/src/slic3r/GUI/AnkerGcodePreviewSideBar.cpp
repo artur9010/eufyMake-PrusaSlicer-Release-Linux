@@ -12,7 +12,7 @@
 #include <wx/wx.h>
 #include <wx/sizer.h>
 #include <wx/bitmap.h>
-#include <wx/Overlay.h>
+#include <wx/overlay.h>
 #include "wx/dcbuffer.h"
 
 #include "libslic3r/SLAPrint.hpp"
@@ -22,7 +22,7 @@
 #include "GLCanvas3D.hpp"
 #include "GUI_App.hpp"
 #include "Plater.hpp"
-#include "common/AnkerGUIConfig.hpp"
+#include "Common/AnkerGUIConfig.hpp"
 
 #include "AnkerSideBarNew.hpp"
 #include <slic3r/Utils/DataMangerUi.hpp>

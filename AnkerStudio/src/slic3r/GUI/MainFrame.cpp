@@ -63,7 +63,9 @@
 #endif // _WIN32
 #include "AnkerWebView.hpp"
 #include <wx/stream.h>
+#ifndef __WXGTK__
 #include <wx/msw/cursor.h>
+#endif
 #include <algorithm>
 #include <wx/url.h>
 #include <wx/variant.h>
@@ -4199,13 +4201,13 @@ bool MainFrame::currentSoftwareLanguageIsJapanese()
 
 bool MainFrame::languageIsJapanese()
 {
-#ifdef _WIN32
+#ifndef __APPLE__
     int sysLanguage = wxLocale::GetSystemLanguage();
     wxString sysLanguageName = wxLocale::GetLanguageName(wxLANGUAGE_JAPANESE_JAPAN);
     ANKER_LOG_INFO << "MainFrame::languageIsJapanese: " << ", sysLanguage: " << sysLanguage << ", wxLANGUAGE_JAPANESE: " << wxLANGUAGE_JAPANESE_JAPAN;
     return (sysLanguage == wxLanguage::wxLANGUAGE_JAPANESE_JAPAN ||
         sysLanguage == wxLanguage::wxLANGUAGE_JAPANESE) ;
-#elif __APPLE__
+#else
     FILE* fp = NULL;
     char buffer[1024];
     //Get Language info.
@@ -4259,7 +4261,7 @@ std::string MainFrame::GetTranslateLanguage()
     if (gui != nullptr && gui->app_config->get_bool("multi-language_enable"))
         multi_language_enable = true;
 
-#ifdef _WIN32
+#ifndef __APPLE__
     int sysLanguage = wxLocale::GetSystemLanguage();
     wxString sysLanguageName = wxLocale::GetLanguageName(wxLANGUAGE_JAPANESE_JAPAN);
     ANKER_LOG_INFO << "MainFrame::languageIsJapanese: " << ", sysLanguage: " << sysLanguage << ", wxLANGUAGE_JAPANESE: " << wxLANGUAGE_JAPANESE_JAPAN;
@@ -4270,7 +4272,7 @@ std::string MainFrame::GetTranslateLanguage()
     else
         return std::string("en");
 
-#elif __APPLE__
+#else
     FILE* fp = NULL;
     char buffer[1024];
     //Get Language info.

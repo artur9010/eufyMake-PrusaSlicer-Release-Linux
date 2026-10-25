@@ -14,7 +14,7 @@
 #include "Gizmos/GLGizmoSeam.hpp"
 #include "Gizmos/GLGizmoFdmSupports.hpp"
 #include "wxExtensions.hpp"
-#include "libSlic3r/TriangleMesh.hpp"
+#include "libslic3r/TriangleMesh.hpp"
 #include "GalleryDialog.hpp"
 #include "libslic3r/Geometry.hpp"
 

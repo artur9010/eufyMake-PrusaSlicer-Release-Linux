@@ -1,7 +1,7 @@
 #ifndef ANKER_NET_DEFINES_H
 #define ANKER_NET_DEFINES_H
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
 #define DLL_EXPORT  __attribute__((visibility("default")))
 #else
 #define  DLL_EXPORT _declspec(dllexport)

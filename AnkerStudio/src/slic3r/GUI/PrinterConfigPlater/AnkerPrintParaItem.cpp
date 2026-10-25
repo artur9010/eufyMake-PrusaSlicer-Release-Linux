@@ -1,7 +1,7 @@
 #include "../MsgDialog.hpp"
 #include "AnkerPrintParaItem.hpp"
 #include "AnkerParameterPanel.hpp"
-#include "../common/AnkerTextCtls.h"
+#include "../Common/AnkerTextCtls.h"
 #include "slic3r/Utils/StringHelper.hpp"
 #include "../Common/AnkerFont.hpp"
 #include "slic3r/GUI/Plater.hpp"

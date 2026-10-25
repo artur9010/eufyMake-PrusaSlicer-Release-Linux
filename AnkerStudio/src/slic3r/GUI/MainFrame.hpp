@@ -24,7 +24,7 @@
 #include "AnkerWebView.hpp"
 #include "AnkerFunctionPanel.h"
 #include "AnkerConfigDialog/AnkerConfigDialog.hpp"
-#include "common/AnkerMsgDialog.hpp"
+#include "Common/AnkerMsgDialog.hpp"
 #include "AnkerMsgCentreDialog.hpp"
 #include "AnkerSliceCommentDialog.hpp"
 

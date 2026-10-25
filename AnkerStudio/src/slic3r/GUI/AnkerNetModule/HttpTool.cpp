@@ -53,6 +53,8 @@ public:
 		headerList.push_back(std::string("Os_type: ") + "Windows");
 #elif __APPLE__
 		headerList.push_back(std::string("Os_type: ") + "MacOS");
+#else
+		headerList.push_back(std::string("Os_type: ") + "Linux");
 #endif
 		headerList.push_back(std::string("Content-Type:application/json;charset=UTF-8"));
 		return headerList;

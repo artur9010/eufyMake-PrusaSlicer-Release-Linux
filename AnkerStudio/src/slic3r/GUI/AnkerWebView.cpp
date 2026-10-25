@@ -18,7 +18,7 @@
 #include "libslic3r/AppConfig.hpp"
 #include "AnkerNetBase.h"
 
-#ifdef __APPLE__
+#ifndef _WIN32
 #include <sys/utsname.h>
 #endif
 
@@ -422,7 +422,7 @@ std::string AnkerWebView::getSysVersion()
 	info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 	GetVersionEx((LPOSVERSIONINFO)&info);
 	return std::to_string(info.dwMajorVersion);
-#elif  __APPLE__
+#else
 	struct utsname info;
 	uname(&info);
 	return info.release;	
