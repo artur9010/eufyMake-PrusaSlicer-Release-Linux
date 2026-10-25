@@ -13,4 +13,8 @@ pkgs.mkShell {
     libGL libGLU mesa libx11 libxext libxrandr libxi libxtst libxkbcommon wayland
     fontconfig freetype libsecret systemd
   ];
+  # WebKitGTK needs glib-networking's GIO module for TLS when run from this shell.
+  shellHook = ''
+    export GIO_EXTRA_MODULES=${pkgs.glib-networking}/lib/gio/modules
+  '';
 }

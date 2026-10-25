@@ -7,6 +7,9 @@ prusaslicer_add_cmake_project(
         -DTBB_TEST=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
         -DCMAKE_DEBUG_POSTFIX=_debug
+        # TBB always compiles with -flto on GCC; without fat objects the static archive has
+        # no usable symbol index and linking the app fails with undefined tbb::detail::r1 symbols.
+        "-DCMAKE_CXX_FLAGS:STRING=-ffat-lto-objects"
 )
 
 if (MSVC)

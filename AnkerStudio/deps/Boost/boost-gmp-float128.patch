@@ -1,0 +1,14 @@
+--- a/boost/multiprecision/gmp.hpp
++++ b/boost/multiprecision/gmp.hpp
+@@ -2732,7 +2732,10 @@
+    //
+    ::boost::multiprecision::detail::generic_convert_rational_to_float(*result, backend);
+ }
+-#ifdef BOOST_HAS_FLOAT128
++// With GCC 13+ the gmp_int -> __float128 conversions below fall back to a
++// boost::lexical_cast, which fails to compile because libstdc++ cannot stream
++// __float128. Nothing in the app converts GMP rationals to __float128.
++#if defined(BOOST_HAS_FLOAT128) && !defined(BOOST_GCC)
+ inline void eval_convert_to(__float128* result, const gmp_rational& val)
+ {
+    using default_ops::eval_convert_to;

@@ -138,6 +138,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     list(APPEND _patch_command COMMAND ${PATCH_CMD} ${CMAKE_CURRENT_LIST_DIR}/Boost.patch)
 endif ()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # Boost.Multiprecision 1.78 does not compile against GCC 13+ when GMP rationals are used.
+    list(APPEND _patch_command COMMAND patch -p1 -i ${CMAKE_CURRENT_LIST_DIR}/boost-gmp-float128.patch)
+endif ()
+
 ExternalProject_Add(
     dep_Boost
     URL "https://archives.boost.io/release/1.78.0/source/boost_1_78_0.zip"

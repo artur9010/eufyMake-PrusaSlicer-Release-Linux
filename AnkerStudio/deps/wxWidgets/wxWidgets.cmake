@@ -51,6 +51,8 @@ prusaslicer_add_cmake_project(wxWidgets
         -DwxUSE_GLCANVAS_EGL=OFF
         -DwxUSE_WEBREQUEST=OFF
         -DwxUSE_WEBVIEW=ON
+        # The app loads its bundled fonts with wxFont::AddPrivateFont(); off by default on GTK.
+        -DwxUSE_PRIVATE_FONTS=ON
 )
 
 if (MSVC)
