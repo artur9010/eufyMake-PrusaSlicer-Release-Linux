@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.artur9010.M5FDMStudio</id>
+  <launchable type="desktop-id">io.github.artur9010.M5FDMStudio.desktop</launchable>
+  <name>M5 FDM Studio</name>
+  <summary>Slicer and remote control for AnkerMake M5 and M5C printers</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-only</project_license>
+  <developer id="io.github.artur9010">
+    <name>M5 FDM Studio contributors</name>
+  </developer>
+  <description>
+    <p>
+      M5 FDM Studio is an unofficial community fork of eufyMake Studio for AnkerMake M5
+      and M5C printers. It replaces the closed-source network plugin with an open-source
+      implementation, and offers slicing, remote printing control and live camera
+      streaming.
+    </p>
+    <p>
+      It is based on eufyMake Studio, which is based on PrusaSlicer by Prusa Research. It
+      is not affiliated with, endorsed by, or supported by Anker or eufyMake.
+    </p>
+  </description>
+  <url type="homepage">https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux</url>
+  <url type="bugtracker">https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/issues</url>
+  <categories>
+    <category>Graphics</category>
+    <category>3DGraphics</category>
+    <category>Engineering</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="1.5.26" date="2026-10-25"/>
+  </releases>
+</component>

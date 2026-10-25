@@ -1,0 +1,146 @@
+# Flatpak manifest for M5 FDM Studio.
+#
+# Build a bundle from the repository root with:
+#   flatpak-builder --force-clean --repo=repo build-dir AnkerStudio/pack/flatpak/io.github.artur9010.M5FDMStudio.yml
+#   flatpak build-bundle repo M5FDMStudio.flatpak io.github.artur9010.M5FDMStudio
+#
+# The "deps" module runs the existing AnkerStudio/deps superbuild, which downloads its
+# sources itself, so that module needs network access during the build. That keeps this
+# manifest unsuitable for Flathub, but it is fine for a self-published bundle.
+
+id: io.github.artur9010.M5FDMStudio
+runtime: org.gnome.Platform
+runtime-version: '51'
+sdk: org.gnome.Sdk
+command: m5-fdm-studio
+rename-desktop-file: M5FDMStudio.desktop
+rename-icon: M5FDMStudio
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  # wxWidgets is built without EGL, so the 3D view needs X11 (XWayland on Wayland).
+  - --socket=x11
+  - --device=dri
+  - --env=GDK_BACKEND=x11
+  # Models and G-code are opened from and exported to arbitrary places.
+  - --filesystem=home
+  - --filesystem=/media
+  - --filesystem=/run/media
+  - --talk-name=org.freedesktop.Notifications
+  # Removable media detection (export to SD card).
+  - --system-talk-name=org.freedesktop.UDisks2
+
+modules:
+  # The SDK has no GLU, which GLEW, OpenCSG and the 3D view need.
+  - name: glu
+    buildsystem: meson
+    config-opts:
+      - -Dgl_provider=gl
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - /lib/*.a
+    sources:
+      - type: archive
+        url: https://archive.mesa3d.org/glu/glu-9.0.3.tar.xz
+        sha256: bd43fe12f374b1192eb15fe20e45ff456b9bc26ab57f0eee919f96ca0f8a330f
+
+  - name: jansson
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DJANSSON_BUILD_SHARED_LIBS=ON
+      - -DJANSSON_BUILD_DOCS=OFF
+      - -DJANSSON_EXAMPLES=OFF
+      - -DJANSSON_WITHOUT_TESTS=ON
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    cleanup:
+      - /include
+      - /lib/cmake
+      - /lib/pkgconfig
+    sources:
+      - type: archive
+        url: https://github.com/akheron/jansson/releases/download/v2.14.1/jansson-2.14.1.tar.bz2
+        sha256: 6bd82d3043dadbcd58daaf903d974891128d22aab7dada5d399cb39094af49ce
+
+  # The runtime's libavcodec has no software H.264 decoder, which the camera stream needs.
+  # Build just that decoder (plus parser and swscale); LGPL, no external codec libraries.
+  - name: ffmpeg
+    config-opts:
+      - --disable-everything
+      - --disable-programs
+      - --disable-doc
+      - --disable-static
+      - --enable-shared
+      - --disable-avdevice
+      - --disable-avformat
+      - --disable-avfilter
+      - --disable-swresample
+      - --disable-network
+      - --enable-decoder=h264
+      - --enable-parser=h264
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - /share
+    sources:
+      - type: archive
+        url: https://ffmpeg.org/releases/ffmpeg-7.1.2.tar.xz
+        sha256: 089bc60fb59d6aecc5d994ff530fd0dcb3ee39aa55867849a2bbc4e555f9c304
+
+  # Boost, wxWidgets, OCCT, CGAL, OpenVDB, TBB, ... as static libraries in /app/deps.
+  - name: deps
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDEP_WX_GTK3=ON -DDESTDIR=/app/deps
+      # Top-level -j1 is intentional: each dependency builds itself in parallel.
+      - cmake --build build -j1
+    cleanup:
+      # Everything here is static and linked into the app, except wxWidgets'
+      # WebKit extension in lib/wx, which wxWebView loads at runtime.
+      - /deps/usr/local/bin
+      - /deps/usr/local/include
+      - /deps/usr/local/share
+      - /deps/usr/local/lib/cmake
+      - /deps/usr/local/lib/pkgconfig
+      - /deps/usr/local/lib/*.a
+    sources:
+      - type: dir
+        path: ../../deps
+        skip:
+          - build
+          - deps_build
+
+  - name: m5-fdm-studio
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_PREFIX_PATH=/app/deps/usr/local
+      - -DSLIC3R_STATIC=1
+      - -DSLIC3R_GTK=3
+      - -DSLIC3R_FHS=1
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    post-install:
+      - install -Dm644 pack/flatpak/io.github.artur9010.M5FDMStudio.metainfo.xml -t /app/share/metainfo
+    cleanup:
+      - /lib/udev
+      # Only files named after the app ID are exported; drop the G-code viewer launcher.
+      - /share/applications/M5FDMStudio-gcodeviewer.desktop
+      - /share/icons/hicolor/*/apps/M5FDMStudio-gcodeviewer.png
+    sources:
+      - type: dir
+        path: ../..
+        skip:
+          - build
+          - build_xcode
+          - deps/build
+          - deps/deps_build
+          - deps/bin
+          - pack/flatpak/.flatpak-builder
+          - pack/flatpak/build-dir
+          - pack/flatpak/repo
