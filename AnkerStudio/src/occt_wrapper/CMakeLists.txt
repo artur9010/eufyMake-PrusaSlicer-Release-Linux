@@ -59,5 +59,10 @@ target_link_libraries(OCCTWrapper ${OCCT_LIBS})
 include(GNUInstallDirs)
 
 #install(TARGETS OCCTWrapper DESTINATION "${CMAKE_INSTALL_BINDIR}")
-install(TARGETS OCCTWrapper  DESTINATION "${CMAKE_INSTALL_PREFIX}")
+if (WIN32)
+    install(TARGETS OCCTWrapper  DESTINATION "${CMAKE_INSTALL_PREFIX}")
+else ()
+    # STEP.cpp dlopens OCCTWrapper.so from the directory of the executable.
+    install(TARGETS OCCTWrapper  DESTINATION "${CMAKE_INSTALL_BINDIR}")
+endif ()
 

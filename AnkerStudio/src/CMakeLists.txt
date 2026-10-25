@@ -74,7 +74,9 @@ if (SLIC3R_GUI)
         if (SLIC3R_WX_STABLE)
             find_package(wxWidgets 3.0 REQUIRED COMPONENTS base core adv html gl webview richtext net)
         else ()
-            find_package(wxWidgets 3.1 QUIET COMPONENTS base core adv html gl webview richtext net)
+            # Static libraries are linked in this order and GNU ld resolves left to right, so
+            # list dependents first; richtext also needs xml, which it does not pull in itself.
+            find_package(wxWidgets 3.1 QUIET COMPONENTS richtext webview gl html adv xml core net base)
 
             if (NOT wxWidgets_FOUND)
                 message(FATAL_ERROR "\nCould not find wxWidgets 3.1.\n"
@@ -201,7 +203,7 @@ endif (MINGW)
 
 if (NOT WIN32 AND NOT APPLE)
     # Binary name on unix like systems (Linux, Unix)
-    set_target_properties(eufyStudio PROPERTIES OUTPUT_NAME "eufymake studio")
+    set_target_properties(eufyStudio PROPERTIES OUTPUT_NAME "m5-fdm-studio")
 endif ()
 
 target_link_libraries(eufyStudio libslic3r libcereal)
@@ -338,7 +340,7 @@ else ()
             VERBATIM)
     else ()
         add_custom_command(TARGET eufyStudio POST_BUILD
-            COMMAND ln -sf "eufymake studio" anker-gcodeviewer
+            COMMAND ln -sf m5-fdm-studio m5-fdm-studio-gcodeviewer
             WORKING_DIRECTORY "$<TARGET_FILE_DIR:eufyStudio>"
             COMMENT "Symlinking the G-code viewer to eufyStudio"
             VERBATIM)
@@ -367,7 +369,7 @@ else ()
     install(TARGETS eufyStudio RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
     # Install the symlink for gcodeviewer
-    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink eufymake studio anker-gcodeviewer WORKING_DIRECTORY \$ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})")
+    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink m5-fdm-studio m5-fdm-studio-gcodeviewer WORKING_DIRECTORY \$ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})")
 endif ()
 
 

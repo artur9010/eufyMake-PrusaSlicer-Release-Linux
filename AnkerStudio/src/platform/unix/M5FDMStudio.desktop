@@ -1,12 +1,13 @@
 [Desktop Entry]
-Name=AnkerMake Studio
+Name=M5 FDM Studio
 GenericName=3D Printing Software
-Icon=AnkerStudio
-Exec=ankermake studio %F
+Comment=Slicer and remote control for AnkerMake M5 and M5C printers
+Icon=M5FDMStudio
+Exec=m5-fdm-studio %F
 Terminal=false
 Type=Application
-MimeType=model/stl;application/vnd.ms-3mfdocument;application/prs.wavefront-obj;application/x-amf;
+MimeType=model/stl;model/3mf;application/vnd.ms-3mfdocument;application/prs.wavefront-obj;application/x-amf;
 Categories=Graphics;3DGraphics;Engineering;
-Keywords=3D;Printing;Slicer;slice;3D;printer;convert;gcode;stl;obj;amf;SLA
+Keywords=3D;Printing;Slicer;slice;3D;printer;convert;gcode;stl;obj;amf;3mf;
 StartupNotify=false
-StartupWMClass=anker-studio
+StartupWMClass=m5-fdm-studio
