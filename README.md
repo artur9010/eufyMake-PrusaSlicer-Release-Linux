@@ -32,6 +32,7 @@ RepRap community.
 Key features are:
 
 - **Runs on macOS 27**, which drops Intel app support — fully native arm64, no Rosetta;
+- **Runs on Linux** (x86_64, GTK 3), packaged as a Flatpak;
 - Basic slicing features & GCode viewer;
 - Remote control & monitoring;
 - Live camera streaming, on the local network and remotely;
@@ -45,10 +46,20 @@ are known not to work.
 Prebuilt, signed and notarized builds are on the
 [releases page](https://github.com/bobbyb/eufyMake-PrusaSlicer-Release-ARM/releases).
 
+### Linux
+
+A Flatpak bundle (`M5FDMStudio.flatpak`, x86_64) is attached to each release, and every
+push builds one as a GitHub Actions artifact. Install it with:
+
+```
+flatpak install --user M5FDMStudio.flatpak
+```
+
 ## How to compile
 - macOS on Apple Silicon, [Compile Guide](AnkerStudio/doc/MacOs_build.md)
+- Linux (x86_64, GTK 3), [Compile Guide](AnkerStudio/doc/Linux_build.md)
 
-This fork targets Apple Silicon only. For Windows or Intel builds, use the
+This fork targets Apple Silicon macOS and x86_64 Linux. For Windows builds, use the
 [upstream project](https://github.com/eufymake/eufyMake-PrusaSlicer-Release).
 
 # Report issue
