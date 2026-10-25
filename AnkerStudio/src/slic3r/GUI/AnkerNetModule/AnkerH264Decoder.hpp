@@ -7,12 +7,12 @@
 
 namespace AnkerNet {
 
-// Hardware H.264 decoder (macOS VideoToolbox). Feed it the raw Annex-B elementary
+// H.264 decoder (VideoToolbox on macOS, FFmpeg elsewhere). Feed it the raw Annex-B elementary
 // stream (as it arrives from the printer's P2P video channel); it parses NAL units,
 // builds a format description from SPS/PPS, decodes on the GPU, and delivers each
 // frame as tightly-packed RGB24 (width*height*3) via the frame callback -- exactly
 // what AnkerVideo's wxImage(width,height,data) expects. Plain C++ interface (pimpl);
-// implemented in AnkerH264Decoder.mm.
+// implemented in AnkerH264Decoder.mm (macOS) and AnkerH264Decoder_ffmpeg.cpp (Linux).
 class AnkerH264Decoder
 {
 public:
