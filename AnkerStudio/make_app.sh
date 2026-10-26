@@ -16,6 +16,7 @@
 #   DEV_ID="" ./make_app.sh             # UNSIGNED bundle to test-run locally (no notarize/dmg auth)
 #   DO_BUILD=0 ./make_app.sh            # bundle the existing build without rebuilding
 #   CONFIG=Debug DO_NOTARIZE=0 DO_DMG=0 DEV_ID="" ./make_app.sh   # quick local bundle
+#   DO_BUILD=0 DEV_ID="-" DMG_NAME=x.dmg ./make_app.sh   # ad-hoc signed DMG (what CI does)
 #
 set -euo pipefail
 
@@ -23,12 +24,14 @@ set -euo pipefail
 APP_NAME="M5 FDM Studio"
 FULL_NAME="M5 FDM Studio for AnkerMake M5 M5C printers"   # descriptive/marketing name
 BUNDLE_ID="com.bobbyb.m5-fdm-studio"               # must NOT be com.anker.*
-VERSION="0.1.0"
+VERSION="${VERSION:-0.1.0}"
 
 # Your "Developer ID Application" identity, e.g.:
 #   DEV_ID="Developer ID Application: Jane Doe (AB12CD34EF)"
 # Find it with:  security find-identity -v -p codesigning
 # Leave EMPTY to produce an unsigned bundle (local testing only).
+# "-" signs ad hoc: no identity needed, the bundle runs on any Mac once the user clears
+# the quarantine flag, but it can't be notarized.
 DEV_ID="${DEV_ID-Developer ID Application: YOUR NAME (TEAMID)}"
 
 NOTARY_PROFILE="${NOTARY_PROFILE:-notary}"   # xcrun notarytool keychain profile name
@@ -38,6 +41,7 @@ CONFIG="${CONFIG:-Release}"        # Release (ship) | Debug (quick test)
 DO_BUILD="${DO_BUILD:-1}"          # 0 = skip xcodebuild, bundle existing build
 DO_NOTARIZE="${DO_NOTARIZE:-1}"    # 0 = sign but don't notarize
 DO_DMG="${DO_DMG:-1}"              # 0 = don't build a DMG
+JOBS="${JOBS:-8}"                  # xcodebuild parallelism
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PROJ="$HERE/build_xcode/eufyStudio.xcodeproj"
@@ -49,13 +53,14 @@ APP="$DIST/$APP_NAME.app"
 
 log() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 signing=1; [[ -z "$DEV_ID" || "$DEV_ID" == *"YOUR NAME"* ]] && signing=0
+[ "$DEV_ID" = "-" ] && signing=adhoc
 
 command -v dylibbundler >/dev/null || { echo "missing: brew install dylibbundler"; exit 1; }
 
 # ---------------------------------------------------------------- 1. build
 if [ "$DO_BUILD" = 1 ]; then
     log "Building eufyStudio ($CONFIG)"
-    xcodebuild -project "$PROJ" -target eufyStudio -configuration "$CONFIG" -jobs 8 \
+    xcodebuild -project "$PROJ" -target eufyStudio -configuration "$CONFIG" -jobs "$JOBS" \
         > /tmp/make_app_build.log 2>&1 || { tail -30 /tmp/make_app_build.log; exit 1; }
 fi
 BIN="$BINDIR/eufyStudio"
@@ -115,6 +120,16 @@ if [ "$signing" = 1 ]; then
         --entitlements "$ENTITLEMENTS" --sign "$DEV_ID" "$APP"
     codesign --verify --deep --strict --verbose=2 "$APP"
     log "Gatekeeper assessment:"; spctl -a -vvv --type execute "$APP" 2>&1 | head -3 || true
+elif [ "$signing" = adhoc ]; then
+    log "Ad-hoc signing (no identity; not notarizable)"
+    # dylibbundler rewrote load paths, which invalidates the linker's signatures; arm64
+    # refuses to run code without a valid one. Re-sign inside-out.
+    find "$APP/Contents/Frameworks" -name "*.dylib" -print0 | while IFS= read -r -d '' d; do
+        codesign --force --sign - "$d"
+    done
+    codesign --force --entitlements "$ENTITLEMENTS" --sign - "$APP"
+    codesign --verify --deep --strict --verbose=2 "$APP"
+    DO_NOTARIZE=0
 else
     log "No DEV_ID set -> UNSIGNED bundle (run locally only; can't notarize/distribute)"
     DO_NOTARIZE=0
@@ -133,7 +148,7 @@ fi
 # ---------------------------------------------------------------- 6. DMG
 if [ "$DO_DMG" = 1 ]; then
     log "Building DMG"
-    STAGE="$DIST/dmg_stage"; DMG="$DIST/${APP_NAME// /_}-$VERSION.dmg"
+    STAGE="$DIST/dmg_stage"; DMG="$DIST/${DMG_NAME:-${APP_NAME// /_}-$VERSION.dmg}"
     rm -rf "$STAGE" "$DMG"; mkdir -p "$STAGE"
     ditto "$APP" "$STAGE/$APP_NAME.app"
     ln -s /Applications "$STAGE/Applications"

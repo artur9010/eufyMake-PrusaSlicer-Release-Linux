@@ -10,9 +10,9 @@ M5/M5C printers. This repo is the **Linux fork**
 (`git@github.com:artur9010/eufyMake-PrusaSlicer-Release-Linux.git`, remote `origin`), built
 on top of the Apple Silicon fork (remote `upstream`, `bobbyb/eufyMake-PrusaSlicer-Release-ARM`).
 
-Supported targets: **macOS arm64**, **Linux x86_64/aarch64 (GTK 3)** and **Windows x64
-(MSVC, CI-built only)**. The shipped Linux artifact is a Flatpak bundle; Windows gets an
-Inno Setup installer and a portable zip.
+Supported targets: **macOS arm64/x86_64**, **Linux x86_64/aarch64 (GTK 3)** and **Windows
+x64 (MSVC, CI-built only)**. The shipped Linux artifact is a Flatpak bundle; Windows gets an
+Inno Setup installer and a portable zip; macOS gets DMGs.
 
 Everything that matters lives under `AnkerStudio/`:
 
@@ -27,6 +27,7 @@ Everything that matters lives under `AnkerStudio/`:
 | `AnkerStudio/doc/` | `Linux_build.md`, `MacOs_build.md`, `Windows_build.md` (the build guides; keep them current) |
 | `.github/workflows/linux.yml` | CI: Flatpak build matrix (x86_64 + aarch64), release upload on `v*` tags |
 | `.github/workflows/windows.yml` | CI: Windows x64 installer + zip, release upload on `v*` tags |
+| `.github/workflows/macos.yml` | CI: DMG build matrix (arm64 + x86_64), release upload on `v*` tags |
 
 ## Building on Linux
 
@@ -171,6 +172,17 @@ through to nothing (uninitialised widgets, missing return values, empty paths). 
 - Deps flags that only make sense for GCC/Clang (`-ffat-lto-objects`, `-include cstdint`,
   `-std=gnu17`) must stay behind `if (NOT MSVC)`: overriding `CMAKE_*_FLAGS` on MSVC drops
   `/EHsc` etc., and cl.exe reads stray words as source files.
+- `.github/workflows/macos.yml`: native runners `macos-15` (arm64) and `macos-15-intel`
+  (x86_64; GitHub's last Intel image, retired around fall 2027). A `deps` job builds and
+  caches `deps/deps_build/destdir` (key: arch, runner label, deployment target, `deps/**`);
+  the `app` job restores it, runs `gen_xcode_proj.sh` (`ARCH=...`), `xcodebuild`, then
+  `make_app.sh` with `DEV_ID="-"` (ad-hoc signed, not notarized) and checks the binary arch
+  and that no load command points at `/opt/homebrew` or `/usr/local`. Artifacts:
+  `M5FDMStudio-macos-{arm64,x86_64}.dmg`, attached to `v*` releases. Deployment target
+  is 11.0, but the bundled brew bottles have minos 15.0, so the DMGs really need macOS 15.
+  Cold run: deps ~35 min (arm64) / ~1h50 (Intel), app ~25 / ~50 min.
+- Xcode 16+ (Apple clang 17) errors on `-Wenum-constexpr-conversion` in Boost 1.78 MPL
+  headers; `deps-macos.cmake` and the root `CMakeLists.txt` pass `-Wno-enum-constexpr-conversion`.
 - Logs: `gh run view <id> --repo artur9010/eufyMake-PrusaSlicer-Release-Linux --log-failed`.
   The top-level annotation (`xvfb-run failed with exit code 1`) is meaningless; grep the
   log for `Error`/`failed` to find the real cause.

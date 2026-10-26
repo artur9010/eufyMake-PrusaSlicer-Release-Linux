@@ -1,11 +1,16 @@
 # Building M5 FDM Studio on macOS
 
-This fork builds for **Apple Silicon (arm64) only** — `gen_xcode_proj.sh` passes
-`-DCMAKE_OSX_ARCHITECTURES=arm64`. There is no Intel or universal build.
+The default target is **Apple Silicon (arm64)**. Intel (x86_64) builds work too: build
+on an Intel Mac and run `gen_xcode_proj.sh` with `ARCH=x86_64` (step 3). The deps and the
+Homebrew libraries are built for the machine's own architecture, so build each
+architecture natively; there is no universal build.
+
+Prebuilt DMGs for both architectures come out of CI (`.github/workflows/macos.yml`), see
+[Prebuilt DMGs](#prebuilt-dmgs-from-ci) below.
 
 ## 0. Prerequisites
 
-- An Apple Silicon Mac (M1 or later), macOS 11 or newer
+- A Mac (Apple Silicon or Intel), macOS 11 or newer
 - Xcode from the App Store, plus the command line tools (`xcode-select --install`)
 - Homebrew packages:
 
@@ -60,6 +65,17 @@ before running it — a fresh clone in any directory works as-is. It creates
 `build_xcode/`, runs CMake with the Xcode generator, and copies the pinned certificates
 from `resources/crt/` into the build output directory.
 
+Optional environment variables, and extra arguments passed straight to CMake:
+
+```
+ARCH=x86_64 ./gen_xcode_proj.sh                 # Intel Mac (default: ARCH=arm64)
+MACOS_DEPLOYMENT_TARGET=11.0 ./gen_xcode_proj.sh  # oldest macOS to support (default: SDK version)
+./gen_xcode_proj.sh -DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)"
+```
+
+If you set a deployment target, build the deps with the same one
+(`cmake .. -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0`).
+
 ## 4. Build and run
 
 Open `AnkerStudio/build_xcode/eufyStudio.xcodeproj` in Xcode, select the **eufyStudio**
@@ -87,7 +103,25 @@ CONFIG=Debug DO_NOTARIZE=0 DO_DMG=0 DEV_ID="" ./make_app.sh   # quick local bund
 The full pipeline needs a "Developer ID Application" certificate and notarization
 credentials stored once with `xcrun notarytool store-credentials`. See the comments at the
 top of `make_app.sh`. Pass `DEV_ID` in the environment rather than editing the script, so
-your signing identity is not committed.
+your signing identity is not committed. `DEV_ID="-"` signs ad hoc instead (no
+certificate needed, no notarization); that is what CI does.
+
+## Prebuilt DMGs from CI
+
+`.github/workflows/macos.yml` builds `M5FDMStudio-macos-arm64.dmg` and
+`M5FDMStudio-macos-x86_64.dmg` on native GitHub runners (`macos-15` and `macos-15-intel`)
+with a deployment target of macOS 11. The bundled Homebrew dylibs (OpenSSL, jansson, xz,
+zstd) are bottles built for macOS 15, though, so the DMGs effectively need **macOS 15 or
+newer**; the CI log prints each bundled file's `minos`. Every push uploads them as
+workflow artifacts and `v*` tags attach them to the GitHub release. The deps install tree
+is cached per architecture, keyed on the contents of `deps/`.
+
+There is no Developer ID in CI, so the app is only ad-hoc signed and not notarized.
+Gatekeeper blocks it on first launch: right-click the app and choose **Open**, or run
+
+```
+xattr -dr com.apple.quarantine "/Applications/M5 FDM Studio.app"
+```
 
 ## Network plugin
 
