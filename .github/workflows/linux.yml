@@ -13,9 +13,17 @@ permissions:
 
 jobs:
   flatpak:
-    name: Build Flatpak bundle
-    runs-on: ubuntu-24.04
+    name: Build Flatpak bundle (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-51
       options: --privileged
@@ -30,17 +38,18 @@ jobs:
 
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          bundle: M5FDMStudio.flatpak
+          arch: ${{ matrix.arch }}
+          bundle: M5FDMStudio-${{ matrix.arch }}.flatpak
           manifest-path: AnkerStudio/pack/flatpak/io.github.artur9010.M5FDMStudio.yml
           # The deps superbuild (Boost, wxWidgets, OCCT, ...) dominates build time. The key
           # only changes with the manifest or deps/, so the cache is saved once per deps
-          # change; on a miss the action falls back to the newest "flatpak-builder-x86_64*"
+          # change; on a miss the action falls back to the newest "flatpak-builder-<arch>*"
           # cache, and flatpak-builder itself rebuilds only modules whose sources changed.
-          cache-key: flatpak-builder-x86_64-${{ hashFiles('AnkerStudio/pack/flatpak/*.yml', 'AnkerStudio/deps/**') }}
+          cache-key: flatpak-builder-${{ matrix.arch }}-${{ hashFiles('AnkerStudio/pack/flatpak/*.yml', 'AnkerStudio/deps/**') }}
           upload-artifact: true
 
       - name: Attach bundle to release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: M5FDMStudio.flatpak
+          files: M5FDMStudio-${{ matrix.arch }}.flatpak

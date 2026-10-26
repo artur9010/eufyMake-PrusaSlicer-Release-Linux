@@ -1,11 +1,11 @@
 # Building M5 FDM Studio on Linux
 
 The Linux build uses GTK 3 and WebKitGTK 4.1. It is tested on x86_64 with GCC 16 and
-CMake 4. Most users should just install the Flatpak from the
+CMake 4; CI also builds an aarch64 (arm64) Flatpak. Most users should just install the Flatpak from the
 [releases page](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases):
 
 ```
-flatpak install --user M5FDMStudio.flatpak
+flatpak install --user M5FDMStudio-x86_64.flatpak   # or M5FDMStudio-aarch64.flatpak
 flatpak run io.github.artur9010.M5FDMStudio
 ```
 
@@ -94,5 +94,5 @@ flatpak-builder --user --force-clean --repo=repo build-dir \
 flatpak build-bundle repo M5FDMStudio.flatpak io.github.artur9010.M5FDMStudio
 ```
 
-GitHub Actions builds the same bundle on every push (`.github/workflows/linux.yml`) and
+GitHub Actions builds the bundle for x86_64 and aarch64 on every push (`.github/workflows/linux.yml`) and
 attaches it to releases for `v*` tags.
