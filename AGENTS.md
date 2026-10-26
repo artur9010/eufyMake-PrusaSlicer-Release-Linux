@@ -160,7 +160,11 @@ through to nothing (uninitialised widgets, missing return values, empty paths). 
   the `app` job restores it, runs `gen_xcode_proj.sh` (`ARCH=...`), `xcodebuild`, then
   `make_app.sh` with `DEV_ID="-"` (ad-hoc signed, not notarized) and checks the binary arch
   and that no load command points at `/opt/homebrew` or `/usr/local`. Artifacts:
-  `M5FDMStudio-macos-{arm64,x86_64}.dmg`, attached to `v*` releases.
+  `M5FDMStudio-macos-{arm64,x86_64}.dmg`, attached to `v*` releases. Deployment target
+  is 11.0, but the bundled brew bottles have minos 15.0, so the DMGs really need macOS 15.
+  Cold run: deps ~35 min (arm64) / ~1h50 (Intel), app ~25 / ~50 min.
+- Xcode 16+ (Apple clang 17) errors on `-Wenum-constexpr-conversion` in Boost 1.78 MPL
+  headers; `deps-macos.cmake` and the root `CMakeLists.txt` pass `-Wno-enum-constexpr-conversion`.
 - Logs: `gh run view <id> --repo artur9010/eufyMake-PrusaSlicer-Release-Linux --log-failed`.
   The top-level annotation (`xvfb-run failed with exit code 1`) is meaningless; grep the
   log for `Error`/`failed` to find the real cause.

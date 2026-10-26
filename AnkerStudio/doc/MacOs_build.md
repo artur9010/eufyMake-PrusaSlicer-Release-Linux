@@ -110,9 +110,11 @@ certificate needed, no notarization); that is what CI does.
 
 `.github/workflows/macos.yml` builds `M5FDMStudio-macos-arm64.dmg` and
 `M5FDMStudio-macos-x86_64.dmg` on native GitHub runners (`macos-15` and `macos-15-intel`)
-with a deployment target of macOS 11. Every push uploads them as workflow artifacts and
-`v*` tags attach them to the GitHub release. The deps install tree is cached per
-architecture, keyed on the contents of `deps/`.
+with a deployment target of macOS 11. The bundled Homebrew dylibs (OpenSSL, jansson, xz,
+zstd) are bottles built for macOS 15, though, so the DMGs effectively need **macOS 15 or
+newer**; the CI log prints each bundled file's `minos`. Every push uploads them as
+workflow artifacts and `v*` tags attach them to the GitHub release. The deps install tree
+is cached per architecture, keyed on the contents of `deps/`.
 
 There is no Developer ID in CI, so the app is only ad-hoc signed and not notarized.
 Gatekeeper blocks it on first launch: right-click the app and choose **Open**, or run

@@ -50,7 +50,8 @@ Prebuilt, signed and notarized builds are on the
 
 The [Linux fork](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases)
 also builds DMGs on GitHub Actions for both Mac architectures: `M5FDMStudio-macos-arm64.dmg`
-(Apple Silicon) and `M5FDMStudio-macos-x86_64.dmg` (Intel). They need macOS 11 or newer.
+(Apple Silicon) and `M5FDMStudio-macos-x86_64.dmg` (Intel). They need macOS 15 or newer
+(the bundled Homebrew libraries are built for the macOS 15 CI runners).
 
 These builds are **not signed with a Developer ID or notarized** (only ad-hoc signed), so
 Gatekeeper blocks them on first launch. After copying the app to Applications, either
