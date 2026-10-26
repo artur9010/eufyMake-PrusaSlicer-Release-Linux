@@ -3995,15 +3995,11 @@ void MainFrame::init_menubar_as_editor()
 
         append_submenu(settingsMenu, languageMenu, wxID_ANY, _L("common_menu_settings_language"), "");
 
-        append_menu_item(settingsMenu, wxID_ANY, _L("common_menu_settings_ota"), _L("Open update dialog"),
-            [this](wxCommandEvent&) {
-                auto ankerNet = AnkerNetInst();
-                if (!ankerNet) {
-                    return;
+        append_menu_item(settingsMenu, wxID_ANY, _L("View source code"), _L("Open the source code repository in your browser"),
+            [](wxCommandEvent&) {
+                if (!wxLaunchDefaultBrowser(wxString::FromUTF8(Slic3r::UrlConfig::SourceCodeUrl), wxBROWSER_NEW_WINDOW)) {
+                    ANKER_LOG_WARNING << "launch browser failed, url: " << Slic3r::UrlConfig::SourceCodeUrl;
                 }
-
-                ankerNet->SetOtaCheckType(OtaCheckType_Manual);
-                ankerNet->queryOTAInformation();
             });
     }
 
