@@ -2,7 +2,7 @@ name: macOS (DMG)
 
 on:
   push:
-    branches: [main, ci/macos-dmg]
+    branches: [main]
     tags: ['v*']
   pull_request:
     branches: [main]
