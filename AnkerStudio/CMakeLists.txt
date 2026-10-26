@@ -346,6 +346,8 @@ endif ()
 if (APPLE)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Werror=unguarded-availability-new")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Werror=unguarded-availability-new")
+    # Clang 16+ makes out-of-range enum constants an error; Boost 1.78's MPL headers trip it.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-enum-constexpr-conversion")
     # Newer libc++ (macOS 15+ SDKs) fully removes std::unary_function/binary_function
     # unless explicitly re-enabled; Boost 1.78 still relies on them.
     add_definitions(-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION)

@@ -7,7 +7,9 @@ set(DEP_CMAKE_OPTS
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
     "-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}"
     "-DCMAKE_OSX_DEPLOYMENT_TARGET=${DEP_OSX_TARGET}"
-    "-DCMAKE_CXX_FLAGS=${DEP_WERRORS_SDK}"
+    # Clang 16+ (Xcode 15+) makes out-of-range enum constants a hard error; Boost 1.78's
+    # MPL headers (included by OpenVDB, CGAL, ...) trip it. Same workaround as Boost.cmake.
+    "-DCMAKE_CXX_FLAGS=${DEP_WERRORS_SDK} -Wno-enum-constexpr-conversion"
     "-DCMAKE_C_FLAGS=${DEP_WERRORS_SDK}"
     "-DCMAKE_FIND_FRAMEWORK=LAST"
     "-DCMAKE_FIND_APPBUNDLE=LAST"
