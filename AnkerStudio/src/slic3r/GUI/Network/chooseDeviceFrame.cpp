@@ -260,7 +260,7 @@ void AnkerChooseDeviceItem::OnClickItem(wxMouseEvent& event)
 }
 
 AnkerChooseDeviceListBox::AnkerChooseDeviceListBox(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size) :
-	wxListBox(parent, id, pos, size, 0, nullptr, wxLB_SINGLE | wxLB_NEEDED_SB | wxLB_HSCROLL | wxNO_BORDER)
+	AnkerChooseDeviceListBoxBase(parent, id, pos, size, 0, nullptr, wxLB_SINGLE | wxLB_NEEDED_SB | wxLB_HSCROLL | wxNO_BORDER)
 {
 	SetBackgroundColour(wxColour("#333438"));
 }
@@ -293,7 +293,7 @@ void AnkerChooseDeviceListBox::DeleteItemData(size_t index)
 	if (itemData) {
 		delete itemData;
 	}
-	wxListBox::Delete(index);
+	AnkerChooseDeviceListBoxBase::Delete(index);
 }
 
 

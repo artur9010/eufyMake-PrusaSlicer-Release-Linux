@@ -6,6 +6,8 @@
 #include <wx/string.h>
 #include <wx/button.h>
 #include <wx/listbox.h>
+#include <wx/panel.h>
+#include <vector>
 #include <wx/sizer.h>
 #include <wx/timer.h>
 #include <boost/signals2.hpp>
@@ -94,7 +96,39 @@ private:
 
 
 class AnkerChooseDevicePanel;
-class AnkerChooseDeviceListBox : public wxListBox
+
+#ifdef __WXGTK__
+// GTK's wxListBox is a GtkTreeView and cannot host the custom device rows that
+// AnkerChooseDeviceListBox places inside it, so use a panel that keeps the rows'
+// data itself and provides the few wxListBox calls the list box relies on.
+class AnkerChooseDeviceListBoxBase : public wxPanel
+{
+public:
+	AnkerChooseDeviceListBoxBase(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size,
+		int /*n*/, const wxString* /*choices*/, long /*style*/)
+		: wxPanel(parent, id, pos, size, wxNO_BORDER) {}
+
+	int Append(const wxString& /*label*/, void* clientData)
+	{
+		m_clientData.push_back(clientData);
+		return int(m_clientData.size()) - 1;
+	}
+	void* GetClientData(unsigned int n) const { return n < m_clientData.size() ? m_clientData[n] : nullptr; }
+	unsigned int GetCount() const { return unsigned(m_clientData.size()); }
+	void Delete(unsigned int n)
+	{
+		if (n < m_clientData.size())
+			m_clientData.erase(m_clientData.begin() + n);
+	}
+
+private:
+	std::vector<void*> m_clientData;
+};
+#else
+using AnkerChooseDeviceListBoxBase = wxListBox;
+#endif
+
+class AnkerChooseDeviceListBox : public AnkerChooseDeviceListBoxBase
 {
 public:
 	struct ListBoxItemData {
