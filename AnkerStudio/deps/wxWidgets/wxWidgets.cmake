@@ -22,6 +22,14 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(_wx_patch_step PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_LIST_DIR}/wxWidgets-webkit2gtk-4.1.patch)
 endif ()
 
+# On Windows the app's web views (login) need the Edge (WebView2) backend: the legacy
+# IE backend has no AddScriptMessageHandler(), which AnkerWebView relies on. wx fetches
+# the WebView2 SDK itself; WebView2Loader.dll is shipped next to the executable.
+set(_wx_edge "")
+if (MSVC)
+    set(_wx_edge "-DwxUSE_WEBVIEW_EDGE=ON")
+endif ()
+
 prusaslicer_add_cmake_project(wxWidgets
     URL https://github.com/prusa3d/wxWidgets/archive/0b49beaacce17d90f0c370ecd73221abd089667a.zip
     URL_HASH SHA256=8fa978a76d6bd811b30eecc5124186b9ad54290b820f3a354e85bfa9dae6a5ce
@@ -51,6 +59,7 @@ prusaslicer_add_cmake_project(wxWidgets
         -DwxUSE_GLCANVAS_EGL=OFF
         -DwxUSE_WEBREQUEST=OFF
         -DwxUSE_WEBVIEW=ON
+        ${_wx_edge}
         # The app loads its bundled fonts with wxFont::AddPrivateFont(); off by default on GTK.
         -DwxUSE_PRIVATE_FONTS=ON
 )

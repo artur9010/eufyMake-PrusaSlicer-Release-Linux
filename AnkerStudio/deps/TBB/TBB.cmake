@@ -1,3 +1,11 @@
+# TBB always compiles with -flto on GCC; without fat objects the static archive has
+# no usable symbol index and linking the app fails with undefined tbb::detail::r1 symbols.
+# MSVC must keep its default CMAKE_CXX_FLAGS (/EHsc etc.), so it gets no override.
+set(_tbb_cxx_flags "")
+if (NOT MSVC)
+    set(_tbb_cxx_flags "-DCMAKE_CXX_FLAGS:STRING=-ffat-lto-objects")
+endif ()
+
 prusaslicer_add_cmake_project(
     TBB
     URL "https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.5.0.zip"
@@ -7,9 +15,7 @@ prusaslicer_add_cmake_project(
         -DTBB_TEST=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
         -DCMAKE_DEBUG_POSTFIX=_debug
-        # TBB always compiles with -flto on GCC; without fat objects the static archive has
-        # no usable symbol index and linking the app fails with undefined tbb::detail::r1 symbols.
-        "-DCMAKE_CXX_FLAGS:STRING=-ffat-lto-objects"
+        ${_tbb_cxx_flags}
 )
 
 if (MSVC)
