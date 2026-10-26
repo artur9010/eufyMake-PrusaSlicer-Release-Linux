@@ -10,8 +10,9 @@ M5/M5C printers. This repo is the **Linux fork**
 (`git@github.com:artur9010/eufyMake-PrusaSlicer-Release-Linux.git`, remote `origin`), built
 on top of the Apple Silicon fork (remote `upstream`, `bobbyb/eufyMake-PrusaSlicer-Release-ARM`).
 
-Supported targets: **macOS arm64** and **Linux x86_64/aarch64 (GTK 3)**. Windows is not
-built or tested here. The only shipped Linux artifact is a Flatpak bundle.
+Supported targets: **macOS arm64**, **Linux x86_64/aarch64 (GTK 3)** and **Windows x64
+(MSVC, CI-built only)**. The shipped Linux artifact is a Flatpak bundle; Windows gets an
+Inno Setup installer and a portable zip.
 
 Everything that matters lives under `AnkerStudio/`:
 
@@ -22,8 +23,10 @@ Everything that matters lives under `AnkerStudio/`:
 | `AnkerStudio/src/slic3r/GUI/` | wxWidgets GUI; Anker additions mostly in `Common/`, `Network/`, `AnkerNetModule/` |
 | `AnkerStudio/src/slic3r/GUI/AnkerNetModule/` | Native, open-source replacement for Anker's closed network plugin (MQTT, PPPP P2P video, HTTP, H.264 decode). Protocol notes in `PROTOCOL.md` |
 | `AnkerStudio/pack/flatpak/` | Flatpak manifest, metainfo, deps source list generator |
-| `AnkerStudio/doc/` | `Linux_build.md`, `MacOs_build.md` (the build guides; keep them current) |
+| `AnkerStudio/pack/windows/` | Inno Setup script (`M5FDMStudio.iss`), WebView2Loader/Mesa runtime DLLs |
+| `AnkerStudio/doc/` | `Linux_build.md`, `MacOs_build.md`, `Windows_build.md` (the build guides; keep them current) |
 | `.github/workflows/linux.yml` | CI: Flatpak build matrix (x86_64 + aarch64), release upload on `v*` tags |
+| `.github/workflows/windows.yml` | CI: Windows x64 installer + zip, release upload on `v*` tags |
 
 ## Building on Linux
 
@@ -122,10 +125,13 @@ through to nothing (uninitialised widgets, missing return values, empty paths). 
 
 - `libAnkerNet` (`AnkerNetModule/`) is built from source as `AnkerNetNative`. In Release it is
   copied into `<datadir>/OnlineAnkerNet/Current/libAnkerNet_<ver>.so`; on Linux the bundled
-  copy is looked up at `<exe>/../lib/libAnkerNet.so`, then next to the executable. There is
-  no plugin download.
+  copy is looked up at `<exe>/../lib/libAnkerNet.so`, then next to the executable. On Windows
+  it is `AnkerNet.dll` next to the executable. There is no plugin download.
+- Sockets go through `AnkerNetModule/AnkerSocket.hpp` (Winsock vs POSIX). On Windows a
+  `SO_RCVTIMEO` timeout makes OpenSSL fail with `SSL_ERROR_SYSCALL`, so the MQTT client
+  polls with `select()` there instead.
 - Camera H.264 decode: VideoToolbox on macOS (`AnkerH264Decoder.mm`), FFmpeg (libavcodec +
-  swscale) on Linux (`AnkerH264Decoder_ffmpeg.cpp`). Same interface: Annex-B in, RGB24 out.
+  swscale) on Linux and Windows (`AnkerH264Decoder_ffmpeg.cpp`). Same interface: Annex-B in, RGB24 out.
 - The GNOME runtime's libavcodec has no software H.264 decoder, so the Flatpak builds a
   minimal FFmpeg itself.
 - Running from nix-shell: without `GIO_EXTRA_MODULES` (glib-networking) WebKit/GIO report
@@ -153,6 +159,18 @@ through to nothing (uninitialised widgets, missing return values, empty paths). 
   (`ubuntu-24.04-arm`) in the `flathub-infra/flatpak-github-actions:gnome-51` container.
 - A cold build takes hours; the flatpak-builder cache is keyed on the manifest + `deps/**`.
   Touching `deps/` invalidates it.
+- `.github/workflows/windows.yml` (`windows-2022`, MSVC): deps superbuild with the VS
+  generator into `D:\d` (short paths; MAX_PATH), cached on `deps/**` and saved right after it
+  builds; jansson/OpenSSL 3/FFmpeg (avcodec+swscale, LGPL, shared) from vcpkg, cached
+  separately; app built with Ninja (`-k 0`). The package is staged by hand in the workflow
+  (see `Windows_build.md`), smoke-tested (required DLLs, every DLL import resolves, AnkerNet.dll
+  loads, `M5FDMStudio-console.exe --help`), then zipped and wrapped by Inno Setup. Unsigned.
+- Executables on Windows: `M5FDMStudio.exe` / `-console.exe` / `-gcodeviewer.exe` are small
+  launchers that load `eufyStudio.dll` (the app). The names are also in
+  `Config/AnkerCommonConfig.hpp` (`BrandConfig`) and `Utils/Process.cpp`.
+- Deps flags that only make sense for GCC/Clang (`-ffat-lto-objects`, `-include cstdint`,
+  `-std=gnu17`) must stay behind `if (NOT MSVC)`: overriding `CMAKE_*_FLAGS` on MSVC drops
+  `/EHsc` etc., and cl.exe reads stray words as source files.
 - Logs: `gh run view <id> --repo artur9010/eufyMake-PrusaSlicer-Release-Linux --log-failed`.
   The top-level annotation (`xvfb-run failed with exit code 1`) is meaningless; grep the
   log for `Error`/`failed` to find the real cause.
@@ -169,7 +187,8 @@ through to nothing (uninitialised widgets, missing return values, empty paths). 
 - Match the surrounding file's style; indentation is mixed (older Anker GUI files use tabs,
   `AnkerNetModule/` and upstream PrusaSlicer use 4 spaces). In upstream PrusaSlicer files keep
   diffs minimal so future merges stay easy.
-- Update `AnkerStudio/doc/Linux_build.md` / README when build steps, names or artifacts change.
+- Update `AnkerStudio/doc/Linux_build.md` / `Windows_build.md` / README when build steps,
+  names or artifacts change.
 - **`.gitignore` ignores `*.txt`, `lib`, `bin` and `build*`.** A new `CMakeLists.txt` (or any
   file under a `lib`/`bin` dir) is silently left out: `git add -f` it and check
   `git status`.

@@ -6,6 +6,13 @@ else()
     set(_build_static ON)
 endif()
 
+# Without SSE2 (e.g. aarch64) shuffle.c does "typedef _Bool bool;", which is an
+# error under GCC 15+'s default -std=gnu23. MSVC keeps its default C flags.
+set(_blosc_c_flags "")
+if (NOT MSVC)
+    set(_blosc_c_flags "-DCMAKE_C_FLAGS:STRING=-std=gnu17")
+endif ()
+
 prusaslicer_add_cmake_project(Blosc
     #URL https://github.com/Blosc/c-blosc/archive/refs/tags/v1.17.0.zip
     #URL_HASH SHA256=7463a1df566704f212263312717ab2c36b45d45cba6cd0dccebf91b2cc4b4da9
@@ -21,9 +28,7 @@ prusaslicer_add_cmake_project(Blosc
         -DBUILD_TESTS=OFF 
         -DBUILD_BENCHMARKS=OFF 
         -DPREFER_EXTERNAL_ZLIB=ON
-        # Without SSE2 (e.g. aarch64) shuffle.c does "typedef _Bool bool;", which is an
-        # error under GCC 15+'s default -std=gnu23.
-        "-DCMAKE_C_FLAGS:STRING=-std=gnu17"
+        ${_blosc_c_flags}
 )
 
 if (MSVC)

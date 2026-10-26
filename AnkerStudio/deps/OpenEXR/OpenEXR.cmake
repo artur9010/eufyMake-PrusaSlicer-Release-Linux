@@ -1,3 +1,10 @@
+# 2.5.5 relies on <cstdint> arriving transitively, which GCC 13+ headers no longer do.
+# cl.exe has no -include (it would treat "cstdint" as a source file).
+set(_openexr_cxx_flags "")
+if (NOT MSVC)
+    set(_openexr_cxx_flags "-DCMAKE_CXX_FLAGS:STRING=-include cstdint")
+endif ()
+
 prusaslicer_add_cmake_project(OpenEXR
     # GIT_REPOSITORY https://github.com/openexr/openexr.git
     URL https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v2.5.5.zip
@@ -10,8 +17,7 @@ prusaslicer_add_cmake_project(OpenEXR
         -DPYILMBASE_ENABLE:BOOL=OFF 
         -DOPENEXR_VIEWERS_ENABLE:BOOL=OFF
         -DOPENEXR_BUILD_UTILS:BOOL=OFF
-        # 2.5.5 relies on <cstdint> arriving transitively, which GCC 13+ headers no longer do.
-        "-DCMAKE_CXX_FLAGS:STRING=-include cstdint"
+        ${_openexr_cxx_flags}
 )
 
 if (MSVC)

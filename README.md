@@ -33,6 +33,7 @@ Key features are:
 
 - **Runs on macOS 27**, which drops Intel app support — fully native arm64, no Rosetta;
 - **Runs on Linux** (x86_64 and arm64, GTK 3), packaged as a Flatpak;
+- **Runs on Windows** (x64), as an installer or a portable zip;
 - Basic slicing features & GCode viewer;
 - Remote control & monitoring;
 - Live camera streaming, on the local network and remotely;
@@ -56,12 +57,18 @@ and every push builds them as GitHub Actions artifacts. Install the one for your
 flatpak install --user M5FDMStudio-x86_64.flatpak
 ```
 
+### Windows
+
+`M5FDMStudio-windows-x64-setup.exe` (installer) and `M5FDMStudio-windows-x64.zip`
+(portable: unpack anywhere, run `M5FDMStudio.exe`) are attached to each release of the
+[Linux fork](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases), and
+every push builds them as GitHub Actions artifacts. x64 only. They are not code-signed, so
+SmartScreen asks for confirmation on first launch ("More info" -> "Run anyway").
+
 ## How to compile
 - macOS on Apple Silicon, [Compile Guide](AnkerStudio/doc/MacOs_build.md)
 - Linux (x86_64 and arm64, GTK 3), [Compile Guide](AnkerStudio/doc/Linux_build.md)
-
-This fork targets Apple Silicon macOS and Linux (x86_64 and arm64). For Windows builds, use the
-[upstream project](https://github.com/eufymake/eufyMake-PrusaSlicer-Release).
+- Windows (x64, MSVC), [Compile Guide](AnkerStudio/doc/Windows_build.md)
 
 # Report issue
 You can add an issue to the [github tracker](https://github.com/bobbyb/eufyMake-PrusaSlicer-Release-ARM/issues) if **it isn't already present.**

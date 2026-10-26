@@ -4,11 +4,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <unistd.h>
+#include "AnkerSocket.hpp"
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -19,6 +15,17 @@ namespace AnkerNet {
 namespace {
 
 // --- small helpers ---------------------------------------------------------
+
+#ifdef _WIN32
+// On Windows a recv() that runs into SO_RCVTIMEO fails with WSAETIMEDOUT, which
+// OpenSSL reports as a fatal SSL_ERROR_SYSCALL rather than WANT_READ. So instead of a
+// receive timeout, wait for the socket (or already-buffered TLS data) to be readable
+// before each SSL_read. Returns false on timeout.
+bool sslReadable(SSL* ssl, int fd, int ms)
+{
+    return SSL_has_pending(ssl) || sock::waitReadable(fd, ms);
+}
+#endif
 
 std::string unhex(const std::string& h)
 {
@@ -182,6 +189,7 @@ bool AnkerMqttClient::tlsConnect(const std::string& host, int port)
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
+    sock::init();
     struct addrinfo* res = nullptr;
     if (getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &res) != 0 || !res) {
         std::fprintf(stderr, "[AnkerMqtt] getaddrinfo failed for %s\n", host.c_str());
@@ -195,7 +203,7 @@ bool AnkerMqttClient::tlsConnect(const std::string& host, int port)
             continue;
         if (::connect(fd, ai->ai_addr, ai->ai_addrlen) == 0)
             break;
-        ::close(fd);
+        sock::closeSocket(fd);
         fd = -1;
     }
     freeaddrinfo(res);
@@ -213,7 +221,7 @@ bool AnkerMqttClient::tlsConnect(const std::string& host, int port)
 
     m_ctx = SSL_CTX_new(TLS_client_method());
     if (!m_ctx) {
-        ::close(fd);
+        sock::closeSocket(fd);
         return false;
     }
     // The broker presents a self-signed *.ankermake.com certificate and is its own CA,
@@ -236,7 +244,7 @@ bool AnkerMqttClient::tlsConnect(const std::string& host, int port)
 
     m_ssl = SSL_new(m_ctx);
     if (!m_ssl) {
-        ::close(fd);
+        sock::closeSocket(fd);
         SSL_CTX_free(m_ctx);
         m_ctx = nullptr;
         return false;
@@ -257,17 +265,17 @@ bool AnkerMqttClient::tlsConnect(const std::string& host, int port)
             std::fprintf(stderr, "[AnkerMqtt] TLS handshake failed\n");
         SSL_free(m_ssl);
         m_ssl = nullptr;
-        ::close(fd);
+        sock::closeSocket(fd);
         SSL_CTX_free(m_ctx);
         m_ctx = nullptr;
         return false;
     }
 
     // 1s read timeout so the receive loop can send keepalive pings / exit cleanly.
-    struct timeval tv;
-    tv.tv_sec = 1;
-    tv.tv_usec = 0;
-    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    // (Windows polls with sslReadable() instead, see above.)
+#ifndef _WIN32
+    sock::setRecvTimeout(fd, 1000);
+#endif
 
     m_fd = fd;
     return true;
@@ -281,7 +289,7 @@ void AnkerMqttClient::tlsClose()
         m_ssl = nullptr;
     }
     if (m_fd >= 0) {
-        ::close(m_fd);
+        sock::closeSocket(m_fd);
         m_fd = -1;
     }
     if (m_ctx) {
@@ -311,6 +319,13 @@ bool AnkerMqttClient::readN(uint8_t* data, size_t len)
 {
     size_t got = 0;
     while (got < len) {
+#ifdef _WIN32
+        if (!sslReadable(m_ssl, m_fd, 1000)) {
+            if (!m_running.load() && !m_connected.load())
+                return false;
+            continue; // read timeout mid-packet; keep waiting
+        }
+#endif
         int n = SSL_read(m_ssl, data + got, static_cast<int>(len - got));
         if (n > 0) {
             got += static_cast<size_t>(n);
@@ -361,6 +376,10 @@ bool AnkerMqttClient::readPacket(uint8_t& type, std::vector<uint8_t>& body)
     body.clear();
 
     uint8_t first = 0;
+#ifdef _WIN32
+    if (!sslReadable(m_ssl, m_fd, 1000))
+        return true; // timeout, type stays 0
+#endif
     int n = SSL_read(m_ssl, &first, 1);
     if (n <= 0) {
         int err = SSL_get_error(m_ssl, n);

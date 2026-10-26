@@ -211,7 +211,11 @@ public:
 		bfpath ret;
 		bfpath executablePath = boost::dll::program_location().parent_path();
 #ifdef _WIN32
-		ret = (executablePath / "resources" / "plugin" / AnkerNetFile);
+		// The AnkerNet.dll built from source ships next to the executable (its FFmpeg /
+		// OpenSSL DLLs live there too); resources/plugin was the closed plugin's location.
+		ret = executablePath / AnkerNetFile;
+		if (!FileExist(ret))
+			ret = (executablePath / "resources" / "plugin" / AnkerNetFile);
 #elif __APPLE__
 		ret = executablePath.parent_path() / "Frameworks" / AnkerNetFile;
 #else

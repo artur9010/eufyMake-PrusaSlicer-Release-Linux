@@ -175,7 +175,9 @@ add_custom_command(
 )
 endif()
 
-if (MSVC)
+if (MSVC AND NOT OPEN_SOURCE)
+    # Runtime of the closed-source plugin. The open-source build gets its DLLs
+    # (OpenSSL, FFmpeg, jansson) from the packaging step instead.
     message("--------------------anker net copy file , path = ${PROJECT_BINARY_DIR}/${CMAKE_CFG_INTDIR}")
     add_custom_command(TARGET eufyStudio POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/${CMAKE_CFG_INTDIR}
@@ -264,7 +266,7 @@ if (WIN32)
     endif()
     target_compile_definitions(eufyStudio_app_gui PRIVATE -DSLIC3R_WRAPPER_NOCONSOLE)
     add_dependencies(eufyStudio_app_gui eufyStudio)
-    set_target_properties(eufyStudio_app_gui PROPERTIES OUTPUT_NAME "eufymake studio")
+    set_target_properties(eufyStudio_app_gui PROPERTIES OUTPUT_NAME "M5FDMStudio")
     target_link_libraries(eufyStudio_app_gui PRIVATE boost_headeronly)
 	
 if(NOT OPEN_SOURCE)
@@ -278,7 +280,7 @@ endif ()
     endif ()
     target_compile_definitions(eufyStudio_app_console PRIVATE -DSLIC3R_WRAPPER_CONSOLE)
     add_dependencies(eufyStudio_app_console eufyStudio)
-    set_target_properties(eufyStudio_app_console PROPERTIES OUTPUT_NAME "eufymake studio-console")
+    set_target_properties(eufyStudio_app_console PROPERTIES OUTPUT_NAME "M5FDMStudio-console")
 if(NOT OPEN_SOURCE)	
 	target_link_libraries(eufyStudio_app_console PUBLIC $ENV{THIRD_PART_ROOT}/usr/local/lib/sentry/win/sentry.lib)
 endif ()	
@@ -291,7 +293,7 @@ endif ()
     endif ()
     target_compile_definitions(eufyStudio_app_gcodeviewer PRIVATE -DSLIC3R_WRAPPER_NOCONSOLE -DSLIC3R_WRAPPER_GCODEVIEWER)
     add_dependencies(eufyStudio_app_gcodeviewer eufyStudio)
-    set_target_properties(eufyStudio_app_gcodeviewer PROPERTIES OUTPUT_NAME "anker-gcodeviewer")
+    set_target_properties(eufyStudio_app_gcodeviewer PROPERTIES OUTPUT_NAME "M5FDMStudio-gcodeviewer")
     target_link_libraries(eufyStudio_app_gcodeviewer PRIVATE boost_headeronly)
 if(NOT OPEN_SOURCE)		
 	target_link_libraries(eufyStudio_app_gcodeviewer PUBLIC $ENV{THIRD_PART_ROOT}/usr/local/lib/sentry/win/sentry.lib)

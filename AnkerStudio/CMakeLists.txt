@@ -633,6 +633,24 @@ function(AnkerStudio_copy_dlls target)
         set (_out_dir "$<TARGET_PROPERTY:${target},BINARY_DIR>")
     endif ()
     
+    if (OPEN_SOURCE)
+        # GMP/MPFR are prebuilt DLLs installed by the deps superbuild; WebView2Loader.dll
+        # (wxWebView's Edge backend) is kept in the repository.
+        set(_dll_dirs "")
+        foreach (_prefix ${CMAKE_PREFIX_PATH})
+            list(APPEND _dll_dirs "${_prefix}/bin")
+        endforeach ()
+        find_file(GMP_DLL libgmp-10.dll PATHS ${_dll_dirs} NO_DEFAULT_PATH REQUIRED)
+        find_file(MPFR_DLL libmpfr-4.dll PATHS ${_dll_dirs} NO_DEFAULT_PATH REQUIRED)
+        add_custom_command(TARGET ${target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${_out_dir}
+            COMMAND ${CMAKE_COMMAND} -E copy ${GMP_DLL} ${MPFR_DLL}
+                "${TOP_LEVEL_PROJECT_DIR}/pack/windows/runtime/WebView2Loader.dll" ${_out_dir}
+            COMMENT "Copy gmp, mpfr and WebView2Loader runtime to build tree"
+            VERBATIM)
+        return()
+    endif ()
+
     # This has to be a separate target due to the windows command line lenght limits    
     add_custom_command(TARGET ${target} POST_BUILD 
         COMMAND ${CMAKE_COMMAND} -E make_directory ${_out_dir}
