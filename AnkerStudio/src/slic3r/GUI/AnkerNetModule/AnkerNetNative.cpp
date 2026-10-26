@@ -17,7 +17,7 @@
 #include <vector>
 
 #ifdef _WIN32
-#include <process.h> // getpid
+#include <process.h> // _getpid
 
 // MSVC has localtime_s (swapped arguments, returns errno_t) instead of POSIX localtime_r.
 static inline std::tm* localtime_r(const std::time_t* t, std::tm* out)
@@ -35,6 +35,10 @@ static inline std::tm* localtime_r(const std::time_t* t, std::tm* out)
 #include <curl/curl.h>
 
 #include <openssl/evp.h>
+
+#ifdef _WIN32
+#define getpid _getpid // the POSIX name is deprecated in the UCRT
+#endif
 
 namespace pt = boost::property_tree;
 
