@@ -56,7 +56,7 @@
 #include "format.hpp"
 #include "MsgDialog.hpp"
 #include "UnsavedChangesDialog.hpp"
-#include "slic3r/Utils/AppUpdater.hpp"
+#include "slic3r/Utils/MacUtils.hpp"
 #include "slic3r/GUI/I18N.hpp"
 #include "AnkerBtn.hpp"
 #include "Common/AnkerGUIConfig.hpp"
@@ -1376,22 +1376,11 @@ PageCustom::PageCustom(ConfigWizard *parent)
 
 PageUpdate::PageUpdate(ConfigWizard *parent)
     : ConfigWizardPage(parent, _L("Automatic updates"), _L("Updates"))
-    , version_check(true)
     , preset_update(true)
 {
     const AppConfig *app_config = wxGetApp().app_config;
     auto boldfont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
     boldfont.SetWeight(wxFONTWEIGHT_BOLD);
-
-    auto *box_slic3r = new wxCheckBox(this, wxID_ANY, _L("Check for application updates"));
-    box_slic3r->SetValue(app_config->get("notify_release") != "none");
-    append(box_slic3r);
-    append_text(wxString::Format(_L(
-        "If enabled, %s checks for new application versions online. When a new version becomes available, "
-         "a notification is displayed at the next application startup (never during program usage). "
-         "This is only a notification mechanisms, no automatic installation is done."), SLIC3R_APP_NAME));
-
-    append_spacer(VERTICAL_SPACING);
 
     auto *box_presets = new wxCheckBox(this, wxID_ANY, _L("Update built-in Presets automatically"));
     box_presets->SetValue(app_config->get_bool("preset_update"));
@@ -1408,10 +1397,8 @@ PageUpdate::PageUpdate(ConfigWizard *parent)
     append_text(_L("Additionally a backup snapshot of the whole configuration is created before an update is applied."));
 
     if (PresetBundle::BoolAnkerMain) {
-        this->version_check = false;
         this->preset_update = false;
     } else {
-        box_slic3r->Bind(wxEVT_CHECKBOX, [this](wxCommandEvent &event) { this->version_check = event.IsChecked(); });
         box_presets->Bind(wxEVT_CHECKBOX, [this](wxCommandEvent &event) { this->preset_update = event.IsChecked(); });
     }
 }
@@ -3343,7 +3330,6 @@ bool ConfigWizard::priv::apply_config(AppConfig *app_config, PresetBundle *prese
 
     app_config->set_vendors(appconfig_new);
 
-    app_config->set("notify_release", page_update->version_check ? "all" : "none");
     app_config->set("preset_update", page_update->preset_update ? "1" : "0");
     app_config->set("export_sources_full_pathnames", page_reload_from_disk->full_pathnames ? "1" : "0");
 

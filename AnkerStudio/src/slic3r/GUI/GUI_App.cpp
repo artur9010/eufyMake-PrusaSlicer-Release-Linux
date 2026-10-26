@@ -68,7 +68,6 @@
 #include "../Utils/PrintHost.hpp"
 #include "../Utils/Process.hpp"
 #include "../Utils/MacDarkMode.hpp"
-#include "../Utils/AppUpdater.hpp"
 #include "../Utils/WinRegistry.hpp"
 #include "slic3r/Config/Snapshot.hpp"
 #include "slic3r/Config/AnkerCommonConfig.hpp"
@@ -163,6 +162,9 @@ namespace Slic3r {
 namespace GUI {
 
 class MainFrame;
+
+// Queued when a model download URL is handed over (download_url.txt), handled by start_download().
+wxDEFINE_EVENT(EVT_DOWNLOAD_URL_FILE, wxCommandEvent);
 
 extern wxString WrapEveryCharacter(const wxString& str, wxFont font, const int& lineLength)
 {
@@ -689,22 +691,6 @@ bool static check_old_linux_datadir(const wxString& app_name) {
 }
 #endif
 
-#ifdef _WIN32
-#if 0 // External Updater is replaced with AppUpdater.cpp
-static bool run_updater_win()
-{
-    // find updater exe
-    boost::filesystem::path path_updater = boost::dll::program_location().parent_path() / "ankerstudio-updater.exe";
-    // run updater. Original args: /silent -restartapp anker-studio.exe -startappfirst
-    std::string msg;
-    bool res = create_process(path_updater, L"/silent", msg);
-    if (!res)
-        BOOST_LOG_TRIVIAL(error) << msg; 
-    return res;
-}
-#endif // 0
-#endif // _WIN32
-
 struct FileWildcards {
     std::string_view              title;
     std::vector<std::string_view> file_extensions;
@@ -1079,8 +1065,6 @@ void GUI_App::post_init()
      //            // sees something else than "we want something" on the first start.
      //            show_send_system_info_dialog_if_needed();   
      //        }  
-     //        // app version check is asynchronous and triggers blocking dialog window, better call it last
-     //        // this->app_version_check(false);
      //    });
      //}
 
@@ -1121,9 +1105,6 @@ GUI_App::GUI_App(EAppMode mode)
 	//app config initializes early becasuse it is used in instance checking in AnkerStudio.cpp
     ANKER_LOG_INFO << "parse anker app config";
 	this->init_app_config();
-
-    // init app downloader after path to datadir is set
-    m_app_updater = std::make_unique<AppUpdater>();
 }
 
 GUI_App::~GUI_App()
@@ -1873,40 +1854,6 @@ bool GUI_App::on_init_inner()
 #endif // __WXMSW__
         
         preset_updater = new PresetUpdater();
-        Bind(EVT_SLIC3R_VERSION_ONLINE, &GUI_App::on_version_read, this);
-        Bind(EVT_SLIC3R_EXPERIMENTAL_VERSION_ONLINE, [this](const wxCommandEvent& evt) {
-            if (this->plater_ != nullptr && (m_app_updater->get_triggered_by_user() || app_config->get("notify_release") == "all")) {
-                std::string evt_string = into_u8(evt.GetString());
-                if (*Semver::parse(SLIC3R_VERSION) < *Semver::parse(evt_string)) {
-
-       //comment by Samuel 20231106, Discarded  unused notification text
-      /*              auto notif_type = (evt_string.find("beta") != std::string::npos ? NotificationType::NewBetaAvailable : NotificationType::NewAlphaAvailable);
-                    this->plater_->get_notification_manager()->push_version_notification( notif_type
-                        , NotificationManager::NotificationLevel::ImportantNotificationLevel
-                        , Slic3r::format(_u8L("New prerelease version %1% is available."), evt_string)
-                        , _u8L("See Releases page.")
-                        , [](wxEvtHandler* evnthndlr) {wxGetApp().open_browser_with_warning_dialog("https://github.com/prusa3d/PrusaSlicer/releases"); return true; }
-                    );*/
-                }
-            }
-            });
-        Bind(EVT_SLIC3R_APP_DOWNLOAD_PROGRESS, [this](const wxCommandEvent& evt) {
-            //lm:This does not force a render. The progress bar only updateswhen the mouse is moved.
-            if (this->plater_ != nullptr)
-                this->plater_->get_notification_manager()->set_download_progress_percentage((float)std::stoi(into_u8(evt.GetString())) / 100.f );
-        });
-
-        Bind(EVT_SLIC3R_APP_DOWNLOAD_FAILED, [this](const wxCommandEvent& evt) {
-            if (this->plater_ != nullptr)
-                this->plater_->get_notification_manager()->close_notification_of_type(NotificationType::AppDownload);
-            if(!evt.GetString().IsEmpty())
-                show_error(nullptr, evt.GetString());
-        });
-
-        Bind(EVT_SLIC3R_APP_OPEN_FAILED, [](const wxCommandEvent& evt) {
-            show_error(nullptr, evt.GetString());
-        }); 
-
         Bind(EVT_DOWNLOAD_URL_FILE, [this](wxCommandEvent& evt) { start_download(evt.GetString().ToStdString()); });
     }
     else {
@@ -3271,7 +3218,6 @@ void GUI_App::add_config_menu(wxMenuBar *menu)
         local_menu->Append(config_id_base + ConfigMenuSnapshots, _L("&Configuration Snapshots") + dots, _L("Inspect / activate configuration snapshots"));
         local_menu->Append(config_id_base + ConfigMenuTakeSnapshot, _L("Take Configuration &Snapshot"), _L("Capture a configuration snapshot"));
         PresetBundle::BoolAnkerMain ? nullptr : local_menu->Append(config_id_base + ConfigMenuUpdateConf, _L("Check for Configuration Updates"), _L("Check for configuration updates"));
-        PresetBundle::BoolAnkerMain ? nullptr : local_menu->Append(config_id_base + ConfigMenuUpdateApp, _L("Check for Application Updates"), _L("Check for new version of application"));
 #if defined(__linux__) && defined(SLIC3R_DESKTOP_INTEGRATION) 
         //if (DesktopIntegrationDialog::integration_possible())
         local_menu->Append(config_id_base + ConfigMenuDesktopIntegration, _L("Desktop Integration"), _L("Desktop Integration"));    
@@ -3317,10 +3263,6 @@ void GUI_App::add_config_menu(wxMenuBar *menu)
             // TODO: preset update
 			// check_updates(true);
 			break;
-        case ConfigMenuUpdateApp:
-            // TODO: version update
-            // app_version_check(true);
-            break;
 #ifdef __linux__
         case ConfigMenuDesktopIntegration:
             show_desktop_integration_dialog();
@@ -4447,103 +4389,6 @@ void GUI_App::associate_gcode_files()
     associate_file_type(L".gcode", L"AnkerStudio.GCodeViewer.1", L"AnkerStudioGCodeViewer", true);
 }
 #endif // __WXMSW__
-
-void GUI_App::on_version_read(wxCommandEvent& evt)
-{
-    app_config->set("version_online", into_u8(evt.GetString()));
-    std::string opt = app_config->get("notify_release");
-    if (this->plater_ == nullptr || (!m_app_updater->get_triggered_by_user() && opt != "all" && opt != "release")) {
-        BOOST_LOG_TRIVIAL(info) << "Version online: " << evt.GetString() << ". User does not wish to be notified.";
-        return;
-    }
-    if (*Semver::parse(SLIC3R_VERSION) >= *Semver::parse(into_u8(evt.GetString()))) {
-        if (m_app_updater->get_triggered_by_user())
-        {
-            // comment by Samuel 20231106, Discarded  unused notification text
-            //std::string text = (*Semver::parse(into_u8(evt.GetString())) == Semver()) 
-            //    ? Slic3r::format(_u8L("Check for application update has failed."))
-            //    : Slic3r::format(_u8L("No new version is available. Latest release version is %1%."), evt.GetString());
-
-            //this->plater_->get_notification_manager()->push_version_notification(NotificationType::NoNewReleaseAvailable
-            //    , NotificationManager::NotificationLevel::RegularNotificationLevel
-            //    , text
-            //    , std::string()
-            //    , std::function<bool(wxEvtHandler*)>()
-            //);
-        }
-        return;
-    }
-    // notification
-    /*
-    this->plater_->get_notification_manager()->push_notification(NotificationType::NewAppAvailable
-        , NotificationManager::NotificationLevel::ImportantNotificationLevel
-        , Slic3r::format(_u8L("New release version %1% is available."), evt.GetString())
-        , _u8L("See Download page.")
-        , [](wxEvtHandler* evnthndlr) {wxGetApp().open_web_page_localized("https://www.prusa3d.com/slicerweb"); return true; }
-    );
-    */
-   
-    // TODO: app update
-    // updater 
-    // read triggered_by_user that was set when calling  GUI_App::app_version_check
-    // app_updater(m_app_updater->get_triggered_by_user());
-}
-
-void GUI_App::app_updater(bool from_user)
-{
-    DownloadAppData app_data = m_app_updater->get_app_data();
-
-    if (from_user && (!app_data.version || *app_data.version <= *Semver::parse(SLIC3R_VERSION)))
-    {
-        BOOST_LOG_TRIVIAL(info) << "There is no newer version online.";
-        MsgNoAppUpdates no_update_dialog;
-        no_update_dialog.ShowModal();
-        return;
-
-    }
-
-    assert(!app_data.url.empty());
-    assert(!app_data.target_path.empty());
-
-    // dialog with new version info
-    AppUpdateAvailableDialog dialog(*Semver::parse(SLIC3R_VERSION), *app_data.version, from_user);
-    auto dialog_result = dialog.ShowModal();
-    // checkbox "do not show again"
-    if (dialog.disable_version_check()) {
-        app_config->set("notify_release", "none");
-    }
-    // Doesn't wish to update
-    if (dialog_result != wxID_OK) {
-        return;
-    }
-    // dialog with new version download (installer or app dependent on system) including path selection
-    AppUpdateDownloadDialog dwnld_dlg(*app_data.version, app_data.target_path);
-    dialog_result = dwnld_dlg.ShowModal();
-    //  Doesn't wish to download
-    if (dialog_result != wxID_OK) {
-        return;
-    }
-    app_data.target_path =dwnld_dlg.get_download_path();
-    // start download
-    //comment by Samuel 20231106, Discarded  unused notification text
-    //this->plater_->get_notification_manager()->push_download_progress_notification(GUI::format(_L("Downloading %1%"), app_data.target_path.filename().string()), std::bind(&AppUpdater::cancel_callback, this->m_app_updater.get()));
-    app_data.start_after = dwnld_dlg.run_after_download();
-    m_app_updater->set_app_data(std::move(app_data));
-    m_app_updater->sync_download();
-}
-
-void GUI_App::app_version_check(bool from_user)
-{
-    if (from_user) {
-        if (m_app_updater->get_download_ongoing()) {
-            MessageDialog msgdlg(nullptr, _L("Download of new version is already ongoing. Do you wish to continue?"), _L("Notice"), wxYES_NO);
-            if (msgdlg.ShowModal() != wxID_YES)
-                return;
-        }
-    }
-    std::string version_check_url = app_config->version_check_url();
-    m_app_updater->sync_version(version_check_url, from_user);
-}
 
 #if 1
 void GUI_App::start_download(std::string url)

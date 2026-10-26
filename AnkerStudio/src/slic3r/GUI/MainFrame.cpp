@@ -74,7 +74,6 @@
 #include "FilamentMaterialManager.hpp"
 #include "Common/AnkerDialog.hpp"
 #include "Common/AnkerCopyrightDialog.hpp"
-#include "Common/AnkerOTANotesBox.hpp"
 #include "Common/AnkerComboBox.hpp"
 #include "Common/AnkerSpinBox.hpp"
 #include "Common/AnkerFeedbackDialog.hpp"
@@ -1674,18 +1673,6 @@ void MainFrame::update_title()
 }
 
 
-void MainFrame::OnOtaTimer(wxTimerEvent& event)
-{
-    auto ankerNet = AnkerNetInst();
-    if (!ankerNet) {
-        return;
-    }
-    ANKER_LOG_INFO << "MainFrame::OnOtaTimer.";
-    ankerNet->SetOtaCheckType(OtaCheckType_24Hours);
-    ankerNet->queryOTAInformation();
-}
-
-
 void MainFrame::OnHttpConnectError(wxCommandEvent& event)
 {
     if (m_plater)
@@ -1723,9 +1710,6 @@ void MainFrame::BindEvent()
 void MainFrame::init_tabpanel()
 {
     wxGetApp().update_ui_colours_from_appconfig();        
-    m_otaTimer = new wxTimer(this, wxID_ANY);
-    m_otaTimer->Start(24 * 60 * 60 * 1000); // 24 hours
-    Bind(wxEVT_TIMER, &MainFrame::OnOtaTimer, this, m_otaTimer->GetId());
     m_extrusionTimer = new wxTimer(this, wxID_ANY);
     Bind(wxEVT_TIMER, [this](wxTimerEvent& event)
     {
@@ -2710,75 +2694,6 @@ void MainFrame::create_preset_tabs()
         });
 
     Bind(wxCUSTOMEVT_HTTP_CONNECT_ERROR,&MainFrame::OnHttpConnectError,this);
-
-    Bind(wxCUSTOMEVT_OTA_UPDATE, [this](wxCommandEvent& event) {
-        auto ankerNet = AnkerNetInst();
-        if (!ankerNet) {
-            return;
-        }
-
-        OtaInfo* info = (OtaInfo*)(event.GetClientData());
-
-        if (info)
-        {
-            wxPoint mfPoint = wxGetApp().mainframe->GetPosition();
-            wxSize mfSize = wxGetApp().mainframe->GetClientSize();
-
-            if (info->noUpdate) {
-                if (ankerNet->GetOtaCheckType() == OtaCheckType_Manual) {
-                    wxSize dialogSize = AnkerSize(400, 180);
-                    wxPoint center = wxPoint(mfPoint.x + mfSize.GetWidth() / 2 - dialogSize.GetWidth() / 2,
-                        mfPoint.y + mfSize.GetHeight() / 2 - dialogSize.GetHeight() / 2);
-
-                    AnkerDialog dialog(nullptr, wxID_ANY, _L("common_menu_settings_ota"),
-                        _L("common_popup_ota_noticenew"), center, dialogSize);
-
-                    int result = dialog.ShowAnkerModal(AnkerDialogType_DisplayTextOkDialog);
-                    ANKER_LOG_INFO << "result: " << result;
-                }
-                return;
-            }
-
-
-            {
-                int otaId = m_menubar->FindMenuItem(_L("common_menu_title_settings"), _L("common_menu_settings_ota"));
-                wxMenu* tmpSettingsMenu = nullptr;
-                wxMenuItem* otaItem = m_menubar->FindItem(otaId, &tmpSettingsMenu);
-                if (otaItem) {            
-                    wxImage image(AnkerBase::AnkerResourceIconPath + "ota_reddot.png", wxBITMAP_TYPE_PNG);
-                    if (image.IsOk()) {
-                        wxBitmap bitmap(image);
-                        otaItem->SetBitmap(bitmap);
-                    }
-                }
-
-                wxSize dialogSize = AnkerSize(500, 330);
-                wxPoint center = wxPoint(mfPoint.x + mfSize.GetWidth() / 2 - dialogSize.GetWidth() / 2,
-                    mfPoint.y + mfSize.GetHeight() / 2 - dialogSize.GetHeight() / 2);
-
-                AnkerOtaNotesDialog dialog(nullptr, wxID_ANY, _L("common_menu_settings_ota"),
-                    wxString::FromUTF8(info->version_name.c_str()), wxString::FromUTF8(info->release_note.c_str()), center, dialogSize);
-                int result = 0;
-                if (info->is_forced) {
-                    result = dialog.ShowAnkerModal(OtaType_Forced);
-                }
-                else {
-                    result = dialog.ShowAnkerModal(OtaType_Normal);
-                }
-                ANKER_LOG_INFO << "ota click result: " << result << " is_forced: " << info->is_forced;
-                if (wxID_OK == result) {
-                    wxString url = wxString::FromUTF8(info->download_path.c_str());
-                    wxURI uri(url);
-                    url = uri.BuildURI();
-                    bool success = wxLaunchDefaultBrowser(url, wxBROWSER_NEW_WINDOW);
-                    if (!success) {
-                        ANKER_LOG_WARNING << "launch browser failed, url: " << url.c_str();
-                    }
-                }
-            }
-        }
-
-        });
 
 }
 

@@ -32,13 +32,6 @@ namespace Slic3r {
 static const std::string VENDOR_PREFIX = "vendor:";
 static const std::string MODEL_PREFIX = "model:";
 static const std::string SLICE_PREFIX = "SliceTimesCheck";
-// Because of a crash in PrusaSlicer 2.3.0/2.3.1 when showing an update notification with some locales, we don't want PrusaSlicer 2.3.0/2.3.1
-// to show this notification. On the other hand, we would like PrusaSlicer 2.3.2 to show an update notification of the upcoming PrusaSlicer 2.4.0.
-// Thus we will let PrusaSlicer 2.3.2 and couple of follow-up versions to download the version number from an alternate file until the PrusaSlicer 2.3.0/2.3.1
-// are phased out, then we will revert to the original name.
-// For 2.6.0-alpha1 we have switched back to the original. The file should contain data for AppUpdater.cpp
-static const std::string VERSION_CHECK_URL = "https://files.prusa3d.com/wp-content/uploads/repository/PrusaSlicer-settings-master/live/PrusaSlicer.version";
-//static const std::string VERSION_CHECK_URL = "https://files.prusa3d.com/wp-content/uploads/repository/PrusaSlicer-settings-master/live/PrusaSlicer.version2";
 // Url to index archive zip that contains latest indicies
 static const std::string INDEX_ARCHIVE_URL= "https://files.prusa3d.com/wp-content/uploads/repository/vendor_indices.zip";
 // Url to folder with vendor profile files. Used when downloading new profiles that are not in resources folder.
@@ -158,9 +151,6 @@ void AppConfig::set_defaults()
         if (get("auto_toolbar_size").empty())
             set("auto_toolbar_size", "100");
  
-       if (get("notify_release").empty())
-           set("notify_release", "all"); // or "none" or "release"
-
 #if ENABLE_ENVIRONMENT_MAP
         if (get("use_environment_map").empty())
             set("use_environment_map", "0");
@@ -878,12 +868,6 @@ std::string AppConfig::config_path() const
         (boost::filesystem::path(Slic3r::data_dir()) / (Slic3r::ProfileConfig::gcodeViewerIniName)).make_preferred().string();
 
     return path;
-}
-
-std::string AppConfig::version_check_url() const
-{
-    auto from_settings = get("version_check_url");
-    return from_settings.empty() ? VERSION_CHECK_URL : from_settings;
 }
 
 std::string AppConfig::index_archive_url() const

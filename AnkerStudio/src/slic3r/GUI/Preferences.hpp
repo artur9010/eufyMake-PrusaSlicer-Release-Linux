@@ -17,12 +17,6 @@ class wxRadioButton;
 
 namespace Slic3r {
 
-	enum  NotifyReleaseMode {
-		NotifyReleaseAll,
-		NotifyReleaseOnly,
-		NotifyReleaseNone
-	};
-
 namespace GUI {
 
 class ConfigOptionsGroup;

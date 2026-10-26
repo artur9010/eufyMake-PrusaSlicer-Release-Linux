@@ -2307,29 +2307,6 @@ void  NotificationManager::push_simplify_suggestion_notification(const std::stri
 	notification->object_id = object_id;
 	push_notification_data(std::move(notification), 0);
 }
-void NotificationManager::push_version_notification(NotificationType type, NotificationLevel level, const std::string& text, const std::string& hypertext, std::function<bool(wxEvtHandler*)> callback)
-{
-	assert (type == NotificationType::NewAlphaAvailable
-		 || type == NotificationType::NewBetaAvailable 
-		 || type == NotificationType::NoNewReleaseAvailable);
-
-	for (std::unique_ptr<PopNotification>& notification : m_pop_notifications) {
-		// NoNewReleaseAvailable must not show if alfa / beta is on.
-		NotificationType nttype = notification->get_type();
-		if (type == NotificationType::NoNewReleaseAvailable
-			&& (notification->get_type() == NotificationType::NewAlphaAvailable 
-				|| notification->get_type() == NotificationType::NewBetaAvailable)) {
-			return;
-		}
-		// NoNewReleaseAvailable must close if alfa / beta is being push.
-		if (notification->get_type() == NotificationType::NoNewReleaseAvailable
-			&& (type == NotificationType::NewAlphaAvailable
-				|| type == NotificationType::NewBetaAvailable)) {
-			notification->close();
-		}
-	}
-	push_notification(type, level, text, hypertext, callback);
-}
 void NotificationManager::close_notification_of_type(const NotificationType type)
 {
 	for (std::unique_ptr<PopNotification> &notification : m_pop_notifications) {
@@ -2504,37 +2481,6 @@ void NotificationManager::upload_job_notification_show_error(int id, const std::
 		}
 	}
 }
-void NotificationManager::push_download_progress_notification(const std::string& text, std::function<bool()> cancel_callback)
-{
-	// If already exists, change text and reset progress
-	for (std::unique_ptr<PopNotification>& notification : m_pop_notifications) {
-		if (notification->get_type() == NotificationType::AppDownload) {
-			notification->update({ NotificationType::AppDownload, NotificationLevel::ProgressBarNotificationLevel, 10, text });
-			auto* pbwcn = dynamic_cast<ProgressBarWithCancelNotification*>(notification.get());
-			pbwcn->set_percentage(0.0f);
-			pbwcn->set_cancel_callback(cancel_callback);
-			return;
-		}
-	}
-	// push new one
-	NotificationData data{ NotificationType::AppDownload, NotificationLevel::ProgressBarNotificationLevel, 10, text };
-	push_notification_data(std::make_unique<NotificationManager::ProgressBarWithCancelNotification>(data, m_id_provider, m_evt_handler, cancel_callback), 0);
-}
-void NotificationManager::set_download_progress_percentage(float percentage)
-{
- 	for (std::unique_ptr<PopNotification>& notification : m_pop_notifications) {
-		if (notification->get_type() == NotificationType::AppDownload) {
-			ProgressBarWithCancelNotification* pbwcn = dynamic_cast<ProgressBarWithCancelNotification*>(notification.get());
-			// if this changes the percentage, it should be shown now
-			float percent_b4 = pbwcn->get_percentage();
-			pbwcn->set_percentage(percentage);
-			if (pbwcn->get_percentage() != percent_b4)
-				wxGetApp().plater()->get_current_canvas3D()->schedule_extra_frame(0);
-			return;
-		}
-	}
-}
-
 void NotificationManager::push_download_URL_progress_notification(size_t id, const std::string& text, std::function<bool(DownloaderUserAction, int)> user_action_callback)
 {
 	// If already exists

@@ -1,10 +1,10 @@
-#import "AppUpdater.hpp"
+#import "MacUtils.hpp"
 
 #import <Foundation/Foundation.h>
 
 namespace Slic3r {
 
-// AppUpdater.hpp
+// MacUtils.hpp
 std::string get_downloads_path_mac()
 {
 	// 1)

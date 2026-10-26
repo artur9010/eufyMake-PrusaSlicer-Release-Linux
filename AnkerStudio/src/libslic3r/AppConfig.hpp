@@ -206,9 +206,6 @@ public:
 	bool 				legacy_datadir() const { return m_legacy_datadir; }
 	void 				set_legacy_datadir(bool value) { m_legacy_datadir = value; }
 
-	// Get the Slic3r version check url.
-	// This returns a hardcoded string unless it is overriden by "version_check_url" in the ini file.
-	std::string 		version_check_url() const;
 	// Get the Slic3r url to vendor index archive zip.
 	std::string  		index_archive_url() const;
 	// Get the Slic3r url to folder with vendor profile files.

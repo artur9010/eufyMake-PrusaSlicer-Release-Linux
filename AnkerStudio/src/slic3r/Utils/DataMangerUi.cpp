@@ -24,7 +24,6 @@ wxDEFINE_EVENT(wxCUSTOMEVT_SHOW_DEVICELIST_DIALOG, wxCommandEvent);
 wxDEFINE_EVENT(wxCUSTOMEVT_SWITCH_TO_PRINT_PAGE, wxCommandEvent);
 wxDEFINE_EVENT(wxCUSTOMEVT_ACCOUNT_EXTRUSION, wxCommandEvent);
 wxDEFINE_EVENT(wxCUSTOMEVT_HTTP_CONNECT_ERROR, wxCommandEvent);
-wxDEFINE_EVENT(wxCUSTOMEVT_OTA_UPDATE, wxCommandEvent);
 wxDEFINE_EVENT(wxCUSTOMEVT_ACCOUNT_LOGOUT, wxCommandEvent);
 wxDEFINE_EVENT(wxCUSTOMEVT_GET_MSG_CENTER_CFG, wxCommandEvent);
 wxDEFINE_EVENT(wxCUSTOMEVT_GET_MSG_CENTER_ERR_CODE_INFO, wxCommandEvent);
@@ -78,7 +77,6 @@ void DatamangerUi::SetMainWindow(wxWindow* pWindow)
 		pAnkerNet->Init(para);
 
 		pAnkerNet->SetCallback_RecoverCurl(DatamangerUi::Callback_RecoverCurl);
-		pAnkerNet->SetCallback_OtaInfoRecv(DatamangerUi::Callback_OtaUpdate);
 		pAnkerNet->SetCallback_FilamentRecv(DatamangerUi::Callback_FilamentUpdate);
 		pAnkerNet->SetCallback_GetMsgCenterConfig(DatamangerUi::Callback_GetMsgCenterConfig);
 		pAnkerNet->SetCallback_GetMsgCenterErrorCodeInfo(DatamangerUi::Callback_GetMsgCenterErrCodeInfo);
@@ -600,19 +598,6 @@ void DatamangerUi::Callback_RecoverCurl()
 	ANKER_LOG_ERROR << "wxHttp www.baidu.com Get , wxProtocolError = " << err << ",content = " << res;
 	wxDELETE(httpStream);
 	http.Close();
-}
-
-void DatamangerUi::Callback_OtaUpdate(OtaInfo info)
-{
-	ANKER_LOG_INFO << "sendSigToOTAUpdate.";
-
-	auto pMainWindow = DatamangerUi::GetInstance().pMainWindow;
-	if (pMainWindow != nullptr) {
-		wxCommandEvent evt = wxCommandEvent(wxCUSTOMEVT_OTA_UPDATE);
-		auto pInfo = new OtaInfo(info);
-		evt.SetClientData(pInfo);
-		wxPostEvent(pMainWindow, evt);
-	}
 }
 
 void DatamangerUi::Callback_GetCommentFlags(std::vector<std::string> dataList)

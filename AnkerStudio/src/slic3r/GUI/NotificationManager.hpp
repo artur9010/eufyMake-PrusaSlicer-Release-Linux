@@ -50,13 +50,6 @@ enum class NotificationType
 	Mouse3dDisconnected,
 //	Mouse3dConnected,
 //	NewPresetsAviable,
-	// Notification on the start of AnkerStudio, when a new AnkerStudio version is published.
-	// Contains a hyperlink to open a web browser pointing to the AnkerStudio download location.
-	NewAppAvailable,
-	// Like NewAppAvailable but with text and link for alpha / bet release
-	NewAlphaAvailable,
-	NewBetaAvailable,
-	NoNewReleaseAvailable,
 	// Notification on the start of AnkerStudio, when updates of system profiles are detected.
 	// Contains a hyperlink to execute installation of the new system profiles.
 	PresetUpdateAvailable,
@@ -80,8 +73,6 @@ enum class NotificationType
 	ProgressBar,
 	// Progress bar with info from Print Host Upload Queue dialog.
 	PrintHostUpload,
-	// Progress bar of download next version app.
-	AppDownload,
 	// Progress bar with cancel button, cannot be closed
 	// On end of slicing and G-code processing (the full G-code preview is available),
 	// contains a hyperlink to export the G-code to a removable media or hdd.
@@ -194,9 +185,6 @@ public:
 	// Object warning with ObjectID, closes when object is deleted. ID used is of object not print like in slicing warning.
 	void push_simplify_suggestion_notification(const std::string& text, ObjectID object_id, const std::string& hypertext = "",
 		std::function<bool(wxEvtHandler*)> callback = std::function<bool(wxEvtHandler*)>());
-	// Could be either NewAlphaAvailable, NewBetaAvailable or NoNewReleaseAvailable - this function only makes sure only 1 is visible. 
-	void push_version_notification(NotificationType type, NotificationLevel level, const std::string& text, const std::string& hypertext,
-		std::function<bool(wxEvtHandler*)> callback);
 	// Close object warnings, whose ObjectID is not in the list.
 	// living_oids is expected to be sorted.
 	void remove_simplify_suggestion_of_released_objects(const std::vector<ObjectID>& living_oids);
@@ -221,9 +209,6 @@ public:
 	void set_upload_job_notification_completed_with_warning(int id);
 	void upload_job_notification_show_canceled(int id, const std::string& filename, const std::string& host);
 	void upload_job_notification_show_error(int id, const std::string& filename, const std::string& host);
-	// Download App progress
-	void push_download_progress_notification(const std::string& text, std::function<bool()>	cancel_callback);
-	void set_download_progress_percentage(float percentage);
 	// Download URL progress notif
 	void push_download_URL_progress_notification(size_t id, const std::string& text, std::function<bool(DownloaderUserAction, int)> user_action_callback);
 	void set_download_URL_progress(size_t id, float percentage);
@@ -968,9 +953,6 @@ private:
 			return true; 
 		} },
 
-			//{NotificationType::NewAppAvailable, NotificationLevel::ImportantNotificationLevel, 20,  _u8L("New version is available."),  _u8L("See Releases page."), [](wxEvtHandler* evnthndlr) {
-			//	wxGetApp().open_browser_with_warning_dialog("https://github.com/prusa3d/PrusaSlicer/releases"); return true; }},
-			//{NotificationType::NewAppAvailable, NotificationLevel::ImportantNotificationLevel, 20,  _u8L("New vesion of AnkerStudio is available.",  _u8L("Download page.") },
 			//{NotificationType::LoadingFailed, NotificationLevel::RegularNotificationLevel, 20,  _u8L("Loading of model has Failed") },
 			//{NotificationType::DeviceEjected, NotificationLevel::RegularNotificationLevel, 10,  _u8L("Removable device has been safely ejected")} // if we want changeble text (like here name of device), we need to do it as CustomNotification
 	};

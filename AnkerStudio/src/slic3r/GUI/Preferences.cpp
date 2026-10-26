@@ -24,34 +24,6 @@
 
 namespace Slic3r {
 
-	static t_config_enum_names enum_names_from_keys_map(const t_config_enum_values& enum_keys_map)
-	{
-		t_config_enum_names names;
-		int cnt = 0;
-		for (const auto& kvp : enum_keys_map)
-			cnt = std::max(cnt, kvp.second);
-		cnt += 1;
-		names.assign(cnt, "");
-		for (const auto& kvp : enum_keys_map)
-			names[kvp.second] = kvp.first;
-		return names;
-	}
-
-#define CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(NAME) \
-    static t_config_enum_names s_keys_names_##NAME = enum_names_from_keys_map(s_keys_map_##NAME); \
-    template<> const t_config_enum_values& ConfigOptionEnum<NAME>::get_enum_values() { return s_keys_map_##NAME; } \
-    template<> const t_config_enum_names& ConfigOptionEnum<NAME>::get_enum_names() { return s_keys_names_##NAME; }
-
-
-
-	static const t_config_enum_values s_keys_map_NotifyReleaseMode = {
-		{"all",         NotifyReleaseAll},
-		{"release",     NotifyReleaseOnly},
-		{"none",        NotifyReleaseNone},
-	};
-
-	CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(NotifyReleaseMode)
-
 namespace GUI {
 
 PreferencesDialog::PreferencesDialog(wxWindow* parent) :
@@ -89,13 +61,6 @@ void PreferencesDialog::show(const std::string& highlight_opt_key /*= std::strin
 	// cache input values for custom toolbar size
 	m_custom_toolbar_size		= atoi(get_app_config()->get("custom_toolbar_size").c_str());
 	m_use_custom_toolbar_size	= get_app_config()->get_bool("use_custom_toolbar_size");
-
-	// set Field for notify_release to its value
-	if (m_optgroup_gui && m_optgroup_gui->get_field("notify_release") != nullptr) {
-		boost::any val = s_keys_map_NotifyReleaseMode.at(wxGetApp().app_config->get("notify_release"));
-		m_optgroup_gui->get_field("notify_release")->set_value(val, false);
-	}
-	
 
 	if (wxGetApp().is_editor()) {
 		auto app_config = get_app_config();
@@ -433,15 +398,6 @@ void PreferencesDialog::build()
 	// Add "GUI" tab
 	m_optgroup_gui = create_options_tab(L("GUI"), tabs);
 	m_optgroup_gui->m_on_change = [this](t_config_option_key opt_key, boost::any value) {
-		if (opt_key == "notify_release") {
-			int val_int = boost::any_cast<int>(value);
-			for (const auto& item : s_keys_map_NotifyReleaseMode) {
-				if (item.second == val_int) {
-					m_values[opt_key] = item.first;
-					return;
-				}
-			}
-		}
 		if (opt_key == "use_custom_toolbar_size") {
 			m_icon_size_sizer->ShowItems(boost::any_cast<bool>(value));
 			refresh_og(m_optgroup_gui);
@@ -525,17 +481,6 @@ void PreferencesDialog::build()
 			L("If enabled, useful hints are displayed at startup."),
 			app_config->get_bool("show_hints"));
 
-		append_enum_option<NotifyReleaseMode>(m_optgroup_gui, "notify_release",
-			L("Notify about new releases"),
-			L("You will be notified about new release after startup acordingly: All = Regular release and alpha / beta releases. Release only = regular release."),
-			new ConfigOptionEnum<NotifyReleaseMode>(static_cast<NotifyReleaseMode>(s_keys_map_NotifyReleaseMode.at(app_config->get("notify_release")))),
-			{ { "all", L("All") },
-			  { "release", L("Release only") },
-			  { "none", L("None") }
-			});
-
-		m_optgroup_gui->append_separator();
-
 		append_bool_option(m_optgroup_gui, "use_custom_toolbar_size",
 			L("Use custom size for toolbar icons"),
 			L("If enabled, you can change size of toolbar icons manually."),
@@ -545,10 +490,6 @@ void PreferencesDialog::build()
 	activate_options_tab(m_optgroup_gui);
 
 	if (is_editor) {
-		// set Field for notify_release to its value to activate the object
-		boost::any val = s_keys_map_NotifyReleaseMode.at(app_config->get("notify_release"));
-		m_optgroup_gui->get_field("notify_release")->set_value(val, false);
-
 		create_icon_size_slider();
 		m_icon_size_sizer->ShowItems(app_config->get_bool("use_custom_toolbar_size"));
 
@@ -799,10 +740,6 @@ void PreferencesDialog::revert(wxEvent&)
 		}
 		if (key == "default_action_on_close_application" || key == "default_action_on_select_preset" || key == "default_action_on_new_project") {
 			m_optgroup_general->set_value(key, app_config->get(key) == "none");
-			continue;
-		}
-		if (key == "notify_release") {
-			m_optgroup_gui->set_value(key, s_keys_map_NotifyReleaseMode.at(app_config->get(key)));
 			continue;
 		}
 		if (key == "old_settings_layout_mode") {

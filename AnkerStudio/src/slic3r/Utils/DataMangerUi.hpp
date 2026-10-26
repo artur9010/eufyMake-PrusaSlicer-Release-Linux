@@ -21,7 +21,6 @@ wxDECLARE_EVENT(wxCUSTOMEVT_SHOW_DEVICELIST_DIALOG, wxCommandEvent);
 wxDECLARE_EVENT(wxCUSTOMEVT_SWITCH_TO_PRINT_PAGE, wxCommandEvent);
 wxDECLARE_EVENT(wxCUSTOMEVT_ACCOUNT_EXTRUSION, wxCommandEvent);
 wxDECLARE_EVENT(wxCUSTOMEVT_HTTP_CONNECT_ERROR, wxCommandEvent);
-wxDECLARE_EVENT(wxCUSTOMEVT_OTA_UPDATE, wxCommandEvent);
 wxDECLARE_EVENT(wxCUSTOMEVT_ACCOUNT_LOGOUT, wxCommandEvent);
 wxDECLARE_EVENT(wxCUSTOMEVT_GET_MSG_CENTER_CFG, wxCommandEvent);
 wxDECLARE_EVENT(wxCUSTOMEVT_GET_MSG_CENTER_ERR_CODE_INFO, wxCommandEvent);
@@ -75,7 +74,6 @@ public:
 
 	//used for callback
 	static void Callback_RecoverCurl();	
-	static void Callback_OtaUpdate(OtaInfo info);
 	static void Callback_FilamentUpdate();
 	static void Callback_GetMsgCenterConfig(std::map<std::string, MsgCenterConfig> dataMap);
 	static void Callback_GetMsgCenterStatus(int officicalNews, int printNews);

@@ -25,12 +25,9 @@ public:
 	PresetUpdater &operator=(const PresetUpdater &) = delete;
 	~PresetUpdater();
 
-	// If either version check or config updating is enabled, get the appropriate data in the background and cache it.
+	// If config updating is enabled, get the appropriate data in the background and cache it.
 	void sync(const PresetBundle *preset_bundle);
 	void cancel_sync();
-
-	// If version check is enabled, check if chaced online slic3r version is newer, notify if so.
-	void slic3r_update_notify();
 
 	enum UpdateResult {
 		R_NOOP,
@@ -61,14 +58,10 @@ public:
 
 	void on_update_notification_confirm();
 
-	bool version_check_enabled() const;
-
 private:
 	struct priv;
 	std::unique_ptr<priv> p;
 };
 
-//wxDECLARE_EVENT(EVT_SLIC3R_VERSION_ONLINE, wxCommandEvent);
-//wxDECLARE_EVENT(EVT_SLIC3R_EXPERIMENTAL_VERSION_ONLINE, wxCommandEvent);
 }
 #endif

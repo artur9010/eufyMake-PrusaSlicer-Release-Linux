@@ -156,9 +156,7 @@ struct PresetUpdater::priv
 {
 	std::vector<Index> index_db;
 
-	bool enabled_version_check;
 	bool enabled_config_update;
-	std::string version_check_url;
 
 	fs::path cache_path;
 	fs::path cache_vendor_path;
@@ -211,8 +209,6 @@ void PresetUpdater::priv::update_index_db()
 // Pull relevant preferences from AppConfig
 void PresetUpdater::priv::set_download_prefs(const AppConfig *app_config)
 {
-	enabled_version_check = app_config->get("notify_release") != "none";
-	version_check_url = app_config->version_check_url();
 	enabled_config_update = app_config->get_bool("preset_update") && !app_config->legacy_datadir();
 }
 
@@ -1118,7 +1114,7 @@ PresetUpdater::~PresetUpdater()
 void PresetUpdater::sync(const PresetBundle *preset_bundle)
 {
 	p->set_download_prefs(GUI::wxGetApp().app_config);
-	if (!p->enabled_version_check && !p->enabled_config_update) { return; }
+	if (!p->enabled_config_update) { return; }
 
 	// Copy the whole vendors data for use in the background thread
 	// Unfortunatelly as of C++11, it needs to be copied again
@@ -1139,30 +1135,6 @@ void PresetUpdater::cancel_sync()
 		// Cancelling takes some time, but should complete soon enough.
 		p->cancel = true;
 		p->thread.join();
-	}
-}
-
-void PresetUpdater::slic3r_update_notify()
-{
-	if (! p->enabled_version_check)
-		return;
-	auto* app_config = GUI::wxGetApp().app_config;
-	const auto ver_online_str = app_config->get("version_online");
-	const auto ver_online = Semver::parse(ver_online_str);
-	const auto ver_online_seen = Semver::parse(app_config->get("version_online_seen"));
-
-	if (ver_online) {
-		// Only display the notification if the version available online is newer AND if we haven't seen it before
-		if (*ver_online > Slic3r::SEMVER && (! ver_online_seen || *ver_online_seen < *ver_online)) {
-			GUI::MsgUpdateSlic3r notification(Slic3r::SEMVER, *ver_online);
-			notification.ShowModal();
-			if (notification.disable_version_check()) {
-				app_config->set("notify_release", "none");
-				p->enabled_version_check = false;
-			}
-		}
-
-		app_config->set("version_online_seen", ver_online_str);
 	}
 }
 
@@ -1405,11 +1377,6 @@ void PresetUpdater::on_update_notification_confirm()
 	else {
 		BOOST_LOG_TRIVIAL(info) << "User refused the update";
 	}	
-}
-
-bool PresetUpdater::version_check_enabled() const
-{
-	return p->enabled_version_check;
 }
 
 void PresetUpdater::update_index_db()

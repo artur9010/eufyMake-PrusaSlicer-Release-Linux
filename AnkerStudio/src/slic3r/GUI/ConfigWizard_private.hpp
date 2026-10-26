@@ -438,7 +438,6 @@ private:
 
 struct PageUpdate: ConfigWizardPage
 {
-    bool version_check;
     bool preset_update;
     wxTextCtrl* path_text_ctrl;
 

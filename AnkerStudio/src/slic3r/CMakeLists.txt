@@ -403,8 +403,6 @@ set(SLIC3R_GUI_SOURCES
 	GUI/Common/AnkerBitmapCombox.cpp
 	GUI/Common/AnkerPopupWidget.hpp
 	GUI/Common/AnkerPopupWidget.cpp
-    GUI/Common/AnkerOTANotesBox.hpp
-	GUI/Common/AnkerOTANotesBox.cpp
     GUI/Common/AnkerMenuBar.hpp
     GUI/Common/AnkerMenuBar.cpp
 	GUI/Common/AnkerLineEditUnit.hpp
@@ -480,9 +478,7 @@ set(SLIC3R_GUI_SOURCES
     GUI/AnkerNetModule/HttpTool.h
     GUI/AnkerNetModule/HttpTool.cpp
     GUI/AnkerNetModule/BuryDefines.h
-	Utils/AppUpdater.cpp
 	Utils/Singleton.hpp
-    Utils/AppUpdater.hpp
     Utils/Http.cpp
     Utils/Http.hpp
     Utils/FixModelByWin10.cpp
@@ -556,6 +552,7 @@ if (APPLE)
             Utils/RetinaHelperImpl.mm
             Utils/MacDarkMode.mm
             Utils/MacUtils.mm
+            Utils/MacUtils.hpp
             GUI/RemovableDriveManagerMM.mm
             GUI/RemovableDriveManagerMM.h
             GUI/Mouse3DHandlerMac.mm
