@@ -179,6 +179,18 @@ jobs:
           if ($code -ne 0) { throw "M5FDMStudio-console.exe --help exited with $code" }
           if ($out -notmatch 'Usage') { throw "--help printed no usage text" }
 
+          # CLI slice of a bundled model: exercises the engine (TBB, CGAL, Boost, ...).
+          # Upstream sometimes leaves the result as <name>.gcode.tmp, so accept either.
+          $gcode = Join-Path $env:RUNNER_TEMP 'smoke.gcode'
+          $out = & "$pkg\M5FDMStudio-console.exe" --export-gcode --output $gcode "$pkg\resources\shapes\box.stl" 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          Write-Output $out
+          if ($code -ne 0) { throw "CLI slice exited with $code" }
+          $result = @($gcode, "$gcode.tmp") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $result) { throw "CLI slice produced no G-code" }
+          if ((Get-Item $result).Length -lt 1000) { throw "CLI slice produced a suspiciously small $result" }
+          Write-Output "Sliced: $result ($((Get-Item $result).Length) bytes)"
+
       - name: Create zip and installer
         shell: pwsh
         run: |
