@@ -44,8 +44,10 @@ else ()
 
     # GMP 6.2.1's configure probes use pre-C23 empty-parameter prototypes, which GCC 15+
     # rejects under its default -std=gnu23, so CFLAGS pins -std=gnu17.
+    # gmplib.org refuses connections from GitHub Actions runners, so the GNU mirror is tried first.
     ExternalProject_Add(dep_GMP
-        URL https://gmplib.org/download/gmp/gmp-6.2.1.tar.bz2
+        URL https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.bz2
+            https://gmplib.org/download/gmp/gmp-6.2.1.tar.bz2
         URL_HASH SHA256=eae9326beb4158c386e39a356818031bd28f3124cf915f8c5b1dc4c7a36b4d7c
         DOWNLOAD_DIR ${DEP_DOWNLOAD_DIR}/GMP
         BUILD_IN_SOURCE ON 
