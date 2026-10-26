@@ -69,7 +69,9 @@ smoke test of the engine.
 - **CMake 4** rejects old `cmake_minimum_required`; pass `-DCMAKE_POLICY_VERSION_MINIMUM=3.5`
   to the app and to any third-party CMake project (e.g. jansson in the Flatpak).
 - **GCC defaults to C23.** Old autoconf projects (GMP, MPFR) fail `configure` with "no
-  working compiler"; their CFLAGS pin `-std=gnu17`.
+  working compiler"; their CFLAGS pin `-std=gnu17`. Blosc does too, because its non-SSE2
+  path (aarch64) typedefs `bool`. Some breakage only shows up on aarch64, so x86_64
+  passing locally doesn't prove the arm64 CI job will.
 - **Keep PCH on** (`SLIC3R_PCH`, default). Many Anker sources rely on headers that only the
   precompiled header pulls in; building with PCH off produces a flood of missing-include
   errors.

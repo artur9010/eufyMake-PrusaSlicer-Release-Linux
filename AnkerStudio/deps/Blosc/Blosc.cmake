@@ -21,6 +21,9 @@ prusaslicer_add_cmake_project(Blosc
         -DBUILD_TESTS=OFF 
         -DBUILD_BENCHMARKS=OFF 
         -DPREFER_EXTERNAL_ZLIB=ON
+        # Without SSE2 (e.g. aarch64) shuffle.c does "typedef _Bool bool;", which is an
+        # error under GCC 15+'s default -std=gnu23.
+        "-DCMAKE_C_FLAGS:STRING=-std=gnu17"
 )
 
 if (MSVC)
