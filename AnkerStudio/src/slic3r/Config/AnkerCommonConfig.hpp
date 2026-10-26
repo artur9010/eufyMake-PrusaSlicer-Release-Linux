@@ -41,9 +41,10 @@ namespace Slic3r {
         const std::wstring StudioDllName = L"eufyStudio.dll";
         const std::wstring OldStudioRunName = L"AnkerMake";
 
-        const std::wstring StudioExeName = L"eufymake studio.exe";
-        const std::wstring StudioConsoleExeName = L"eufymake studio-console.exe";  
-        const std::wstring GcodeViewerExeName = L"anker - gcodeviewer.exe";
+        // Windows executable names (OUTPUT_NAME of the eufyStudio_app_* targets).
+        const std::wstring StudioExeName = L"M5FDMStudio.exe";
+        const std::wstring StudioConsoleExeName = L"M5FDMStudio-console.exe";
+        const std::wstring GcodeViewerExeName = L"M5FDMStudio-gcodeviewer.exe";
     }
 
     namespace ProfileConfig {
