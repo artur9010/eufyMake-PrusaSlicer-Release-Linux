@@ -1,0 +1,206 @@
+[
+  {
+    "type": "file",
+    "path": "../../deps/Blosc/Blosc.cmake",
+    "dest": "Blosc"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/Blosc/blosc-mods.patch",
+    "dest": "Blosc"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/Boost/Boost.cmake",
+    "dest": "Boost"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/Boost/Boost.patch",
+    "dest": "Boost"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/Boost/boost-gmp-float128.patch",
+    "dest": "Boost"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/Boost/user-config.jam",
+    "dest": "Boost"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/CGAL/CGAL.cmake",
+    "dest": "CGAL"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/CGAL/CGAL.patch",
+    "dest": "CGAL"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/CGAL/cgal/CGALConfigVersion.cmake",
+    "dest": "CGAL/cgal"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/CMakeLists.txt"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/CURL/CURL.cmake",
+    "dest": "CURL"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/Cereal/Cereal.cmake",
+    "dest": "Cereal"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/EXPAT/EXPAT.cmake",
+    "dest": "EXPAT"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/GLEW/GLEW.cmake",
+    "dest": "GLEW"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/GMP/GMP.cmake",
+    "dest": "GMP"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/JPEG/JPEG.cmake",
+    "dest": "JPEG"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/MPFR/MPFR.cmake",
+    "dest": "MPFR"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/NLopt/NLopt.cmake",
+    "dest": "NLopt"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/NanoSVG/NanoSVG.cmake",
+    "dest": "NanoSVG"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/OCCT/OCCT.cmake",
+    "dest": "OCCT"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/OCCT/occt_toolkit.cmake",
+    "dest": "OCCT"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/OpenCSG/CMakeLists.txt.in",
+    "dest": "OpenCSG"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/OpenCSG/OpenCSG.cmake",
+    "dest": "OpenCSG"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/OpenEXR/OpenEXR.cmake",
+    "dest": "OpenEXR"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/OpenSSL/OpenSSL.cmake",
+    "dest": "OpenSSL"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/OpenVDB/OpenVDB.cmake",
+    "dest": "OpenVDB"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/OpenVDB/OpenVDB.patch",
+    "dest": "OpenVDB"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/PNG/PNG.cmake",
+    "dest": "PNG"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/PNG/PNG.patch",
+    "dest": "PNG"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/Qhull/Qhull.cmake",
+    "dest": "Qhull"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/TBB/TBB.cmake",
+    "dest": "TBB"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/TIFF/TIFF.cmake",
+    "dest": "TIFF"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/ZLIB/0001-Respect-BUILD_SHARED_LIBS.patch",
+    "dest": "ZLIB"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/ZLIB/ZLIB.cmake",
+    "dest": "ZLIB"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/deps-linux.cmake"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/deps-macos.cmake"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/deps-mingw.cmake"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/deps-unix-common.cmake"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/deps-windows.cmake"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/wxWidgets/wxWidgets-webkit2gtk-4.1.patch",
+    "dest": "wxWidgets"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/wxWidgets/wxWidgets.cmake",
+    "dest": "wxWidgets"
+  },
+  {
+    "type": "file",
+    "path": "../../deps/wxWidgets/wxWidgets.patch",
+    "dest": "wxWidgets"
+  }
+]
