@@ -3,6 +3,7 @@
 
 #include "Interface Files/DeviceObjectBase.h"
 
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <mutex>
@@ -30,6 +31,7 @@ public:
     std::string p2pConn;     // p2p_conn init-string -> relay server hosts (remote/WAN)
     int stationId = 0;       // station_id
     bool online = true;      // no online flag in the list API; refined via MQTT (Phase 4)
+    std::atomic<bool> mqttSeen{false}; // set on the first MQTT message (logged once)
     anker_device_type deviceType = DEVICE_V8111_TYPE; // default M5
 
     // --- live status, updated from MQTT telemetry (guarded by m_liveMutex) ---

@@ -1222,7 +1222,8 @@ void AnkerNetNativeImpl::startMonitoring()
     if (!m_mqttStarting.compare_exchange_strong(expected, true))
         return;
 
-    std::string userId, email, region;
+    std::string userId, email;
+    bool eu = false;
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         if (!m_login.logined) {
@@ -1231,7 +1232,11 @@ void AnkerNetNativeImpl::startMonitoring()
         }
         userId = m_login.user_id;
         email = m_login.email;
-        region = m_login.ab_code;
+        // ab_code is the account's country (e.g. "PL"), not its region, so pick the broker
+        // from the API host the account was assigned (make-app-eu... -> make-mqtt-eu...).
+        // A printer only publishes to its own region's broker.
+        eu = m_login.domain.find("-eu.") != std::string::npos ||
+            m_login.ab_code == "EU" || m_login.ab_code == "eu";
     }
 
     std::vector<std::string> sns;
@@ -1247,7 +1252,6 @@ void AnkerNetNativeImpl::startMonitoring()
         return;
     }
 
-    const bool eu = (region == "EU" || region == "eu");
     const std::string host = eu ? "make-mqtt-eu.ankermake.com" : "make-mqtt.ankermake.com";
 
     auto client = std::make_unique<AnkerMqttClient>();
@@ -1447,6 +1451,9 @@ void AnkerNetNativeImpl::onMqttMessage(const std::string& topic, const std::stri
         return;
     }
 
+    if (!dev->mqttSeen.exchange(true))
+        std::fprintf(stderr, "[AnkerNetNative] first MQTT message sn=%s topic=%s\n",
+            sn.c_str(), topic.c_str());
     dev->online = true;
 
     // /notice payloads are a JSON array of {"commandType":N,...}; /command/reply and

@@ -99,6 +99,9 @@ profile picture after login.
 ### Connection
 
 - Broker: `make-mqtt.ankermake.com` (or `make-mqtt-eu.ankermake.com` for EU accounts), port **8789**, TLS.
+  A printer publishes only to its own region's broker. Tell EU accounts apart by the login
+  `domain` (`make-app-eu.ankermake.com`), **not** by `ab_code`: that is the account's
+  country code (e.g. `PL`), which is never `EU` for real EU users.
 - Certificate validation is **disabled** (`SSL_VERIFY_NONE`) — matches the community client's own `insecure` option; the broker's cert apparently isn't validated by any known client.
 - MQTT 3.1.1. CONNECT: username = `"eufy_" + user_id`, password = **the user's plain email address** (not the auth token), client ID = `eufypc_<first 8 chars of user_id>_<hex(time^pid)>`, keepalive = 60s, clean session.
 - Client sends a PING roughly every 30s to keep the connection alive.
