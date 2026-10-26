@@ -46,6 +46,20 @@ are known not to work.
 Prebuilt, signed and notarized builds are on the
 [releases page](https://github.com/bobbyb/eufyMake-PrusaSlicer-Release-ARM/releases).
 
+### macOS (this fork's CI builds)
+
+The [Linux fork](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases)
+also builds DMGs on GitHub Actions for both Mac architectures: `M5FDMStudio-macos-arm64.dmg`
+(Apple Silicon) and `M5FDMStudio-macos-x86_64.dmg` (Intel). They need macOS 11 or newer.
+
+These builds are **not signed with a Developer ID or notarized** (only ad-hoc signed), so
+Gatekeeper blocks them on first launch. After copying the app to Applications, either
+right-click it and choose **Open**, or clear the quarantine flag:
+
+```
+xattr -dr com.apple.quarantine "/Applications/M5 FDM Studio.app"
+```
+
 ### Linux
 
 Flatpak bundles (`M5FDMStudio-x86_64.flatpak` and `M5FDMStudio-aarch64.flatpak`) are attached to each release of the
@@ -57,7 +71,7 @@ flatpak install --user M5FDMStudio-x86_64.flatpak
 ```
 
 ## How to compile
-- macOS on Apple Silicon, [Compile Guide](AnkerStudio/doc/MacOs_build.md)
+- macOS (Apple Silicon or Intel), [Compile Guide](AnkerStudio/doc/MacOs_build.md)
 - Linux (x86_64 and arm64, GTK 3), [Compile Guide](AnkerStudio/doc/Linux_build.md)
 
 This fork targets Apple Silicon macOS and Linux (x86_64 and arm64). For Windows builds, use the

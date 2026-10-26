@@ -10,7 +10,7 @@ M5/M5C printers. This repo is the **Linux fork**
 (`git@github.com:artur9010/eufyMake-PrusaSlicer-Release-Linux.git`, remote `origin`), built
 on top of the Apple Silicon fork (remote `upstream`, `bobbyb/eufyMake-PrusaSlicer-Release-ARM`).
 
-Supported targets: **macOS arm64** and **Linux x86_64/aarch64 (GTK 3)**. Windows is not
+Supported targets: **macOS arm64/x86_64** and **Linux x86_64/aarch64 (GTK 3)**. Windows is not
 built or tested here. The only shipped Linux artifact is a Flatpak bundle.
 
 Everything that matters lives under `AnkerStudio/`:
@@ -24,6 +24,7 @@ Everything that matters lives under `AnkerStudio/`:
 | `AnkerStudio/pack/flatpak/` | Flatpak manifest, metainfo, deps source list generator |
 | `AnkerStudio/doc/` | `Linux_build.md`, `MacOs_build.md` (the build guides; keep them current) |
 | `.github/workflows/linux.yml` | CI: Flatpak build matrix (x86_64 + aarch64), release upload on `v*` tags |
+| `.github/workflows/macos.yml` | CI: DMG build matrix (arm64 + x86_64), release upload on `v*` tags |
 
 ## Building on Linux
 
@@ -153,6 +154,13 @@ through to nothing (uninitialised widgets, missing return values, empty paths). 
   (`ubuntu-24.04-arm`) in the `flathub-infra/flatpak-github-actions:gnome-51` container.
 - A cold build takes hours; the flatpak-builder cache is keyed on the manifest + `deps/**`.
   Touching `deps/` invalidates it.
+- `.github/workflows/macos.yml`: native runners `macos-15` (arm64) and `macos-15-intel`
+  (x86_64; GitHub's last Intel image, retired around fall 2027). A `deps` job builds and
+  caches `deps/deps_build/destdir` (key: arch, runner label, deployment target, `deps/**`);
+  the `app` job restores it, runs `gen_xcode_proj.sh` (`ARCH=...`), `xcodebuild`, then
+  `make_app.sh` with `DEV_ID="-"` (ad-hoc signed, not notarized) and checks the binary arch
+  and that no load command points at `/opt/homebrew` or `/usr/local`. Artifacts:
+  `M5FDMStudio-macos-{arm64,x86_64}.dmg`, attached to `v*` releases.
 - Logs: `gh run view <id> --repo artur9010/eufyMake-PrusaSlicer-Release-Linux --log-failed`.
   The top-level annotation (`xvfb-run failed with exit code 1`) is meaningless; grep the
   log for `Error`/`failed` to find the real cause.
