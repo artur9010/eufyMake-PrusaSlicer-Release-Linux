@@ -1,0 +1,217 @@
+name: Windows (installer)
+
+on:
+  push:
+    branches: [main, ci/windows-installer]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Build Windows installer (x64)
+    runs-on: windows-2022
+    timeout-minutes: 360
+    env:
+      # Short build paths: MSBuild/cl still trip over MAX_PATH deep inside the Boost and
+      # OCCT trees when they live under the (long) workspace path.
+      DEPS_BUILD: D:\d
+      DEPS_PREFIX: D:/d/destdir/usr/local
+      VCPKG_INSTALLED: D:\vcpkg_installed
+      VCPKG_TRIPLET: x64-windows-release
+      VCPKG_PREFIX: D:/vcpkg_installed/x64-windows-release
+      APP_BUILD: D:\b
+      PKG_DIR: D:\pkg\M5FDMStudio
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # --- Dependencies -----------------------------------------------------------------
+      # jansson, OpenSSL 3 and a minimal LGPL FFmpeg (avcodec + swscale, shared) from vcpkg.
+      - name: Restore vcpkg cache
+        id: vcpkg-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.VCPKG_INSTALLED }}
+          key: vcpkg-${{ env.VCPKG_TRIPLET }}-win2022-jansson-openssl-ffmpeg-v1
+
+      - name: Install vcpkg packages
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install `
+            --triplet $env:VCPKG_TRIPLET --x-install-root=$env:VCPKG_INSTALLED `
+            jansson openssl "ffmpeg[core,avcodec,swscale]"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Save vcpkg cache
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.VCPKG_INSTALLED }}
+          key: ${{ steps.vcpkg-cache.outputs.cache-primary-key }}
+
+      # The superbuild (Boost, wxWidgets, OCCT, OpenVDB, CGAL, TBB, ...) takes hours. It is
+      # cached on the deps/ tree; restore/save are split so a failing app build still keeps
+      # a freshly built deps cache.
+      - name: Restore deps cache
+        id: deps-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_BUILD }}\destdir
+          key: deps-windows-x64-win2022-${{ hashFiles('AnkerStudio/deps/**') }}
+
+      - name: Build deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        shell: cmd
+        run: |
+          cmake -S AnkerStudio\deps -B %DEPS_BUILD% -G "Visual Studio 17 2022" -A x64 -DDEP_DEBUG=OFF || exit /b 1
+          cmake --build %DEPS_BUILD% --config Release || exit /b 1
+
+      - name: Save deps cache
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.DEPS_BUILD }}\destdir
+          key: ${{ steps.deps-cache.outputs.cache-primary-key }}
+
+      # --- Application -------------------------------------------------------------------
+      - name: Configure
+        shell: cmd
+        run: >-
+          cmake -S AnkerStudio -B %APP_BUILD% -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DSLIC3R_STATIC=1
+          -DSLIC3R_PCH=ON
+          -DSLIC3R_MSVC_COMPILE_PARALLEL=OFF
+          -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+          "-DCMAKE_PREFIX_PATH=%DEPS_PREFIX%;%VCPKG_PREFIX%"
+
+      - name: Build
+        shell: cmd
+        # -k 0: report every failing translation unit in one run, not just the first.
+        run: cmake --build %APP_BUILD% -- -k 0
+
+      # --- Package -----------------------------------------------------------------------
+      - name: Stage portable package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $bin = Join-Path $env:APP_BUILD 'src'
+          $pkg = $env:PKG_DIR
+          New-Item -ItemType Directory -Force $pkg, "$pkg\mesa" | Out-Null
+
+          # App: GUI/console/G-code viewer launchers, the app DLL and its plugins.
+          foreach ($f in 'M5FDMStudio.exe', 'M5FDMStudio-console.exe', 'M5FDMStudio-gcodeviewer.exe',
+                         'eufyStudio.dll', 'AnkerNet.dll', 'OCCTWrapper.dll',
+                         'libgmp-10.dll', 'libmpfr-4.dll', 'WebView2Loader.dll') {
+            Copy-Item (Join-Path $bin $f) $pkg
+          }
+          # OpenSSL, jansson, FFmpeg (and whatever else vcpkg put in bin).
+          Copy-Item "$env:VCPKG_INSTALLED\$env:VCPKG_TRIPLET\bin\*.dll" $pkg
+          # MSVC runtime (app-local, so no VC++ redistributable install is needed).
+          $crt = Get-ChildItem "$env:VCToolsRedistDir\x64" -Directory -Filter 'Microsoft.VC*.CRT' | Select-Object -First 1
+          Copy-Item "$($crt.FullName)\*.dll" $pkg
+          # Software OpenGL fallback, loaded by the launcher when the GPU driver is too old.
+          Copy-Item AnkerStudio\pack\windows\runtime\mesa\opengl32.dll "$pkg\mesa\"
+          Copy-Item -Recurse AnkerStudio\resources "$pkg\resources"
+          Remove-Item -Recurse -Force "$pkg\resources\udev"
+          Copy-Item LICENSE "$pkg\LICENSE.txt"
+          Get-ChildItem $pkg | Format-Table Name, Length
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pkg = $env:PKG_DIR
+          $required = 'M5FDMStudio.exe', 'M5FDMStudio-console.exe', 'M5FDMStudio-gcodeviewer.exe',
+                      'eufyStudio.dll', 'AnkerNet.dll', 'OCCTWrapper.dll', 'WebView2Loader.dll',
+                      'libgmp-10.dll', 'libmpfr-4.dll', 'jansson.dll',
+                      'libcrypto-3-x64.dll', 'libssl-3-x64.dll',
+                      'avcodec-*.dll', 'avutil-*.dll', 'swscale-*.dll',
+                      'vcruntime140.dll', 'msvcp140.dll', 'mesa\opengl32.dll', 'resources\crt\*'
+          $missing = $required | Where-Object { -not (Test-Path (Join-Path $pkg $_)) }
+          if ($missing) { throw "Missing from package: $($missing -join ', ')" }
+
+          # Every DLL any packaged binary imports must be in the package or part of Windows.
+          $bad = @()
+          foreach ($bin in Get-ChildItem "$pkg\*" -Include *.exe, *.dll -File) {
+            $deps = & dumpbin /nologo /dependents $bin.FullName |
+              Where-Object { $_ -match '^\s+(\S+\.dll)\s*$' } | ForEach-Object { $Matches[1] }
+            foreach ($d in $deps) {
+              if ($d -like 'api-ms-win-*' -or $d -like 'ext-ms-*') { continue }
+              if (Test-Path (Join-Path $pkg $d)) { continue }
+              if (Test-Path (Join-Path "$env:SystemRoot\System32" $d)) { continue }
+              $bad += "$($bin.Name) -> $d"
+            }
+          }
+          if ($bad) { throw "Unresolved DLL imports:`n$($bad -join "`n")" }
+
+          # Load the network plugin the way the app does and check its exports.
+          Add-Type -TypeDefinition @'
+          using System;
+          using System.Runtime.InteropServices;
+          public static class Native {
+            [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
+            public static extern IntPtr LoadLibraryExW(string path, IntPtr file, uint flags);
+            [DllImport("kernel32", CharSet = CharSet.Ansi)]
+            public static extern IntPtr GetProcAddress(IntPtr module, string name);
+          }
+          '@
+          $h = [Native]::LoadLibraryExW((Join-Path $pkg 'AnkerNet.dll'), [IntPtr]::Zero, 0x8)
+          if ($h -eq [IntPtr]::Zero) { throw "LoadLibrary(AnkerNet.dll) failed: $([Runtime.InteropServices.Marshal]::GetLastWin32Error())" }
+          foreach ($sym in 'GetAnkerNet', 'GetAnkerNetMappingVersion') {
+            if ([Native]::GetProcAddress($h, $sym) -eq [IntPtr]::Zero) { throw "AnkerNet.dll does not export $sym" }
+          }
+
+          # Headless CLI run through the console launcher (loads eufyStudio.dll).
+          $out = & "$pkg\M5FDMStudio-console.exe" --help 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          Write-Output $out
+          if ($code -ne 0) { throw "M5FDMStudio-console.exe --help exited with $code" }
+          if ($out -notmatch 'Usage') { throw "--help printed no usage text" }
+
+      - name: Create zip and installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Select-String -Path AnkerStudio\version.inc -Pattern 'set\(SLIC3R_VERSION "([^"]+)"\)').Matches[0].Groups[1].Value
+          Write-Output "Version: $version"
+          New-Item -ItemType Directory -Force dist | Out-Null
+          & 7z a -tzip -mx=7 dist\M5FDMStudio-windows-x64.zip $env:PKG_DIR
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Qp `
+            "/DAppVersion=$version" "/DSourceDir=$env:PKG_DIR" "/O$PWD\dist" `
+            AnkerStudio\pack\windows\M5FDMStudio.iss
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: M5FDMStudio-windows-x64-setup
+          path: dist/M5FDMStudio-windows-x64-setup.exe
+          if-no-files-found: error
+
+      - name: Upload portable zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: M5FDMStudio-windows-x64
+          path: dist/M5FDMStudio-windows-x64.zip
+          if-no-files-found: error
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/M5FDMStudio-windows-x64-setup.exe
+            dist/M5FDMStudio-windows-x64.zip
