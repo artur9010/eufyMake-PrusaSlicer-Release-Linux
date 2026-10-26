@@ -4,12 +4,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <unistd.h>
+#include "AnkerSocket.hpp"
 
 #include <openssl/evp.h>
 
@@ -266,7 +261,7 @@ bool AnkerPpppClient::sendPkt(uint8_t type, const std::vector<uint8_t>& payload)
     dst.sin_family = AF_INET;
     dst.sin_port = htons(m_peerPort);
     dst.sin_addr.s_addr = m_peerAddr;
-    ssize_t n = ::sendto(m_fd, pkt.data(), pkt.size(), 0,
+    ssize_t n = ::sendto(m_fd, reinterpret_cast<const char*>(pkt.data()), pkt.size(), 0,
         reinterpret_cast<struct sockaddr*>(&dst), sizeof(dst));
     return n == static_cast<ssize_t>(pkt.size());
 }
@@ -474,15 +469,12 @@ void AnkerPpppClient::dispatch(uint8_t type, const std::vector<uint8_t>& p,
 
 bool AnkerPpppClient::pump(int timeoutMs)
 {
-    struct timeval tv;
-    tv.tv_sec = timeoutMs / 1000;
-    tv.tv_usec = (timeoutMs % 1000) * 1000;
-    setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    sock::setRecvTimeout(m_fd, timeoutMs);
 
     uint8_t buf[4096];
     struct sockaddr_in src;
     socklen_t slen = sizeof(src);
-    ssize_t n = ::recvfrom(m_fd, buf, sizeof(buf), 0,
+    ssize_t n = ::recvfrom(m_fd, reinterpret_cast<char*>(buf), sizeof(buf), 0,
         reinterpret_cast<struct sockaddr*>(&src), &slen);
     if (n >= 4 && buf[0] == 0xF1) {
         uint32_t srcAddr = src.sin_addr.s_addr;
@@ -587,7 +579,7 @@ bool AnkerPpppClient::connectLan(const std::string& duidStr, const std::string& 
         return false;
     }
 
-    m_fd = ::socket(AF_INET, SOCK_DGRAM, 0);
+    m_fd = sock::udpSocket();
     if (m_fd < 0)
         return false;
 
@@ -598,7 +590,7 @@ bool AnkerPpppClient::connectLan(const std::string& duidStr, const std::string& 
     // IP is given, try it first for a few seconds (the cloud's ip_addr is often empty
     // or stale), then switch to broadcast discovery for the remainder.
     int one = 1;
-    setsockopt(m_fd, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one));
+    setsockopt(m_fd, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<const char*>(&one), sizeof(one));
 
     bool directed = !ip.empty() && inet_addr(ip.c_str()) != INADDR_NONE;
     long long switchToBroadcast = directed ? (nowMs() + 6000) : 0;
@@ -653,7 +645,7 @@ bool AnkerPpppClient::sendPktTo(uint32_t addr, uint16_t port, uint8_t type,
     dst.sin_family = AF_INET;
     dst.sin_port = htons(port);
     dst.sin_addr.s_addr = addr;
-    ssize_t n = ::sendto(m_fd, pkt.data(), pkt.size(), 0,
+    ssize_t n = ::sendto(m_fd, reinterpret_cast<const char*>(pkt.data()), pkt.size(), 0,
         reinterpret_cast<struct sockaddr*>(&dst), sizeof(dst));
     return n == static_cast<ssize_t>(pkt.size());
 }
@@ -685,7 +677,7 @@ bool AnkerPpppClient::connectRelay(const std::string& duidStr, const std::string
         return false;
     std::fprintf(stderr, "[AnkerPppp] relay hosts: %s\n", hosts.c_str());
 
-    m_fd = ::socket(AF_INET, SOCK_DGRAM, 0);
+    m_fd = sock::udpSocket();
     if (m_fd < 0)
         return false;
     m_connected = false;
@@ -760,7 +752,7 @@ bool AnkerPpppClient::connectRelay(const std::string& duidStr, const std::string
             localPort = ntohs(sn.sin_port); localAddr = sn.sin_addr.s_addr;
         }
         if (localAddr == 0) { // discover routable local IP via a temp connected socket
-            int t = ::socket(AF_INET, SOCK_DGRAM, 0);
+            int t = sock::udpSocket();
             if (t >= 0) {
                 struct sockaddr_in r; std::memset(&r, 0, sizeof(r));
                 r.sin_family = AF_INET; r.sin_port = htons(PPPP_WAN_PORT);
@@ -770,7 +762,7 @@ bool AnkerPpppClient::connectRelay(const std::string& duidStr, const std::string
                     if (getsockname(t, reinterpret_cast<struct sockaddr*>(&ln), &ll) == 0)
                         localAddr = ln.sin_addr.s_addr;
                 }
-                ::close(t);
+                sock::closeSocket(t);
             }
         }
     }
@@ -975,7 +967,7 @@ void AnkerPpppClient::close()
     if (m_fd >= 0) {
         if (m_connected)
             sendPkt(T_CLOSE, {});
-        ::close(m_fd);
+        sock::closeSocket(m_fd);
         m_fd = -1;
     }
     m_connected = false;

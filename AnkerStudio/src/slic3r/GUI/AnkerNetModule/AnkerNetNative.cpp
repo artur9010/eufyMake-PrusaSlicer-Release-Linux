@@ -16,7 +16,17 @@
 #include <thread>
 #include <vector>
 
+#ifdef _WIN32
+#include <process.h> // getpid
+
+// MSVC has localtime_s (swapped arguments, returns errno_t) instead of POSIX localtime_r.
+static inline std::tm* localtime_r(const std::time_t* t, std::tm* out)
+{
+    return ::localtime_s(out, t) == 0 ? out : nullptr;
+}
+#else
 #include <unistd.h>
+#endif
 
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
