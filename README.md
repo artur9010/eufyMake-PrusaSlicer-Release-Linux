@@ -2,12 +2,14 @@
 ![image](AnkerStudio/resources/icons/AnkerStudio.png)
 
 ## Overview
-M5 FDM Studio is a native Apple Silicon build of **eufyMake Studio**, for AnkerMake M5 and
-M5C printers. It offers remote printing control and real-time streaming, giving you full
+M5 FDM Studio is a native, multi-platform build of **eufyMake Studio** (macOS, Linux and
+Windows), for AnkerMake M5 and M5C printers. It offers remote printing control and real-time streaming, giving you full
 control wherever you are.
 
-It is a fork of [eufyMake Studio](https://github.com/eufymake/eufyMake-PrusaSlicer-Release)
-and tracks upstream v1.5.26. The slicing engine, profiles, and output are unchanged; the
+This repository is a fork of [bobbyb's M5 FDM Studio 0.1.0](https://github.com/bobbyb/eufyMake-PrusaSlicer-Release-ARM)
+(the native Apple Silicon build), which is itself a fork of
+[eufyMake Studio](https://github.com/eufymake/eufyMake-PrusaSlicer-Release) and tracks
+upstream v1.5.26. The slicing engine, profiles, and output are unchanged; the
 work in this fork is in the networking, device, and printing layers.
 
 ### Why this fork exists
@@ -31,7 +33,7 @@ RepRap community.
 
 Key features are:
 
-- **Runs on macOS 27**, which drops Intel app support — fully native arm64, no Rosetta;
+- **Runs on macOS 27**, which drops Intel app support — fully native arm64, no Rosetta (Intel Macs get their own build);
 - **Runs on Linux** (x86_64 and arm64, GTK 3), packaged as a Flatpak;
 - **Runs on Windows** (x64), as an installer or a portable zip;
 - Basic slicing features & GCode viewer;
@@ -44,13 +46,13 @@ are known not to work.
 
 ## Download
 
-Prebuilt, signed and notarized builds are on the
-[releases page](https://github.com/bobbyb/eufyMake-PrusaSlicer-Release-ARM/releases).
+All builds are on the [releases page](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases), and every push to `main`
+builds them as GitHub Actions artifacts. The original signed and notarized Apple Silicon
+0.1.0 is on [bobbyb's releases page](https://github.com/bobbyb/eufyMake-PrusaSlicer-Release-ARM/releases).
 
-### macOS (this fork's CI builds)
+### macOS
 
-The [Linux fork](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases)
-also builds DMGs on GitHub Actions for both Mac architectures: `M5FDMStudio-macos-arm64.dmg`
+DMGs for both Mac architectures: `M5FDMStudio-macos-arm64.dmg`
 (Apple Silicon) and `M5FDMStudio-macos-x86_64.dmg` (Intel). They need macOS 15 or newer
 (the bundled Homebrew libraries are built for the macOS 15 CI runners).
 
@@ -64,9 +66,8 @@ xattr -dr com.apple.quarantine "/Applications/M5 FDM Studio.app"
 
 ### Linux
 
-Flatpak bundles (`M5FDMStudio-x86_64.flatpak` and `M5FDMStudio-aarch64.flatpak`) are attached to each release of the
-[Linux fork](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases),
-and every push builds them as GitHub Actions artifacts. Install the one for your CPU:
+Flatpak bundles: `M5FDMStudio-x86_64.flatpak` and `M5FDMStudio-aarch64.flatpak`. Install
+the one for your CPU:
 
 ```
 flatpak install --user M5FDMStudio-x86_64.flatpak
@@ -75,9 +76,7 @@ flatpak install --user M5FDMStudio-x86_64.flatpak
 ### Windows
 
 `M5FDMStudio-windows-x64-setup.exe` (installer) and `M5FDMStudio-windows-x64.zip`
-(portable: unpack anywhere, run `M5FDMStudio.exe`) are attached to each release of the
-[Linux fork](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/releases), and
-every push builds them as GitHub Actions artifacts. x64 only. They are not code-signed, so
+(portable: unpack anywhere, run `M5FDMStudio.exe`). x64 only. They are not code-signed, so
 SmartScreen asks for confirmation on first launch ("More info" -> "Run anyway").
 
 ## How to compile
@@ -86,7 +85,7 @@ SmartScreen asks for confirmation on first launch ("More info" -> "Run anyway").
 - Windows (x64, MSVC), [Compile Guide](AnkerStudio/doc/Windows_build.md)
 
 # Report issue
-You can add an issue to the [github tracker](https://github.com/bobbyb/eufyMake-PrusaSlicer-Release-ARM/issues) if **it isn't already present.**
+You can add an issue to the [github tracker](https://github.com/artur9010/eufyMake-PrusaSlicer-Release-Linux/issues) if **it isn't already present.**
 
 ## License
 	
