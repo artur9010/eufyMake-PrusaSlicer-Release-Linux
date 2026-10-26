@@ -132,7 +132,8 @@ jobs:
           bad=0
           while IFS= read -r -d '' f; do
               file -b "$f" | grep -q Mach-O || continue
-              echo "== ${f#$app/}"
+              # minos shows the oldest macOS each file (e.g. a Homebrew dylib) loads on.
+              echo "== ${f#$app/} (minos $(vtool -show-build "$f" | awk '/minos/ {print $2; exit}'))"
               otool -L "$f" | tail -n +2
               if otool -L "$f" | tail -n +2 | grep -E '/opt/homebrew|/usr/local|/Users/'; then
                   echo "::error::$f references a non-bundled library"; bad=1
